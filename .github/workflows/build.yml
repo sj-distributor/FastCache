@@ -107,9 +107,9 @@ jobs:
         run: dotnet nuget push InMemory/EasyCache.InMemory.${{ steps.gitversion.outputs.SemVer }}.nupkg --skip-duplicate --no-symbols true --api-key ${{secrets.NUGET}} --source https://api.nuget.org/v3/index.json
         
       - name: Pack EasyCache.Rediss
-        run: dotnet pack EasyCache.Rediss -p:PackageVersion=${{ steps.gitversion.outputs.SemVer }} --configuration=Release -o Rediss
+        run: dotnet pack EasyCache.Redis -p:PackageVersion=${{ steps.gitversion.outputs.SemVer }} --configuration=Release -o Redis
       - name: Push EasyCache.Redis to nuget
-        run: dotnet nuget push Rediss/EasyCache.Rediss.${{ steps.gitversion.outputs.SemVer }}.nupkg --skip-duplicate --no-symbols true --api-key ${{secrets.NUGET}} --source https://api.nuget.org/v3/index.json  
+        run: dotnet nuget push Redis/EasyCache.Rediss.${{ steps.gitversion.outputs.SemVer }}.nupkg --skip-duplicate --no-symbols true --api-key ${{secrets.NUGET}} --source https://api.nuget.org/v3/index.json  
 #
 #      - name: Push to nuget
 #        run: dotnet nuget push artifacts/NetCoreCache.${{ steps.gitversion.outputs.SemVer }}.nupkg --skip-duplicate --no-symbols true --api-key ${{secrets.NUGET}} --source https://api.nuget.org/v3/index.json
