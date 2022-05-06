@@ -19,8 +19,6 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddDbContext<MemoryDbContext>();
 
-
-
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

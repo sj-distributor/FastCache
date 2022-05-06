@@ -16,11 +16,11 @@ public class UserService : IService
 
     public virtual User Add(User user)
     {
-        var entityEntry = _dbContext.Set<User>().Add(user);
+        _dbContext.Set<User>().Add(user);
         _dbContext.SaveChanges();
-        return entityEntry.Entity;
+        return user;
     }
-    
+
     [Cacheable("user-single", "{id}", 60 * 30)]
     public virtual User Single(string id)
     {
@@ -32,9 +32,11 @@ public class UserService : IService
     [Evictable(new[] { "user-single", "users" }, "{user:id}")]
     public virtual User Update(User user)
     {
-        var entityEntry = _dbContext.Set<User>().Update(user);
+        var first = _dbContext.Set<User>().First(x => x.Id == user.Id);
+        first.Name = user.Name;
+        _dbContext.Set<User>().Update(first);
         _dbContext.SaveChanges();
-        return entityEntry.Entity;
+        return first;
     }
 
     [Evictable(new[] { "user-single", "users" }, "{id}")]
@@ -53,7 +55,7 @@ public class UserService : IService
         Thread.Sleep(TimeSpan.FromSeconds(1));
         return _dbContext.Set<User>().ToList();
     }
-    
+
     [Cacheable("users", "{number}")]
     public virtual IEnumerable<User> Performance(string number)
     {

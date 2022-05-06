@@ -49,8 +49,8 @@ public class MemoryCacheTests
     }
 
     [Theory]
-    [InlineData("anson", "18", "18")]
-    [InlineData("anson1", "19", "19")]
+    [InlineData("anson1", "18", "18")]
+    [InlineData("anson11", "19", "19")]
     public async void TestMemoryCacheCanSet(string key, string value, string result)
     {
         await _memoryCache.Set(key, new CacheItem()
@@ -63,8 +63,8 @@ public class MemoryCacheTests
     }
 
     [Theory]
-    [InlineData("anson", "18", null)]
-    [InlineData("anson1", "19", null)]
+    [InlineData("anson2", "18", null)]
+    [InlineData("anson22", "19", null)]
     public async void TestMemoryCacheCanDelete(string key, string value, string result)
     {
         await _memoryCache.Set(key, new CacheItem()
@@ -94,8 +94,8 @@ public class MemoryCacheTests
     }
 
     [Theory]
-    [InlineData("ansonExpire", "18", null)]
-    [InlineData("ansonExpire", "19", null)]
+    [InlineData("ansonExpire333", "18", null)]
+    [InlineData("ansonExpire444", "19", null)]
     public async void TestMemoryCacheCanExpire(string key, string value, string result)
     {
         await _memoryCache.Set(key, new CacheItem()

@@ -14,7 +14,7 @@ public class MemoryDbContext : DbContext
     {
         if (!optionsBuilder.IsConfigured)
         {
-            optionsBuilder.UseInMemoryDatabase("user");
+            optionsBuilder.UseInMemoryDatabase($"user");
         }
     }
 

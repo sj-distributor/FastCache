@@ -16,7 +16,7 @@ public class UserController : ControllerBase
     }
 
     [Route("/"), HttpGet]
-    public User? Get(string id)
+    public  User Get(string id)
     {
         return _userService.Single(id);
     }

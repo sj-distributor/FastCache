@@ -51,8 +51,8 @@ public class MultiBucketsMemoryCacheTests
     }
 
     [Theory]
-    [InlineData("anson", "18", "18")]
-    [InlineData("anson1", "19", "19")]
+    [InlineData("anson4", "18", "18")]
+    [InlineData("anson44", "19", "19")]
     public async void TestMemoryCacheCanSet(string key, string value, string result)
     {
         await _memoryCache.Set(key, new CacheItem()
@@ -65,8 +65,8 @@ public class MultiBucketsMemoryCacheTests
     }
 
     [Theory]
-    [InlineData("anson", "18", null)]
-    [InlineData("anson1", "19", null)]
+    [InlineData("anson5", "18", null)]
+    [InlineData("anson55", "19", null)]
     public async void TestMemoryCacheCanDelete(string key, string value, string result)
     {
         await _memoryCache.Set(key, new CacheItem()
@@ -80,8 +80,8 @@ public class MultiBucketsMemoryCacheTests
     }
 
     [Theory]
-    [InlineData("anson1111", "18", null)]
-    [InlineData("anson2222", "19", null)]
+    [InlineData("anson555", "18", null)]
+    [InlineData("anson555555", "19", null)]
     public async void TestMemoryCacheCanDeleteByPattern(string key, string value, string result)
     {
         await _memoryCache.Set(key, new CacheItem()
@@ -95,8 +95,8 @@ public class MultiBucketsMemoryCacheTests
     }
     
     [Theory]
-    [InlineData("ansonExpire", "18", null)]
-    [InlineData("ansonExpire", "19", null)]
+    [InlineData("ansonExpire11", "18", null)]
+    [InlineData("ansonExpire22", "19", null)]
     public async void TestMemoryCacheCanExpire(string key, string value, string result)
     {
         await _memoryCache.Set(key, new CacheItem()
