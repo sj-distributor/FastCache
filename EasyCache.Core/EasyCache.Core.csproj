@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>netstandard2.1</TargetFramework>
+        <Nullable>enable</Nullable>
+        <PackageId>EasyCache.Core</PackageId>
+        <Authors>Anson.G</Authors>
+        <Company>Wiltechs</Company>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="AspectCore.Core" Version="2.2.0" />
+        <PackageReference Include="AspectCore.Extensions.DependencyInjection" Version="2.2.0" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="6.0.0" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="6.0.0" />
+        <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
+    </ItemGroup>
+
+</Project>
