@@ -22,7 +22,7 @@ public class MultiBucketsMemoryCacheTests
     [InlineData(MaxMemoryPolicy.RANDOM)]
     public void TestWhenTheMemoryIsFull_EliminatedSuccess(MaxMemoryPolicy maxMemoryPolicy)
     {
-        var memoryCache = new MultiBucketsMemoryCache(1, 50);
+        var memoryCache = new MultiBucketsMemoryCache(1, 50, maxMemoryPolicy);
         for (var i = 0; i < 50; i++)
         {
             Thread.Sleep(TimeSpan.FromSeconds(0.1));
