@@ -18,7 +18,7 @@ namespace EasyCache.InMemory.Drivers
         private readonly uint _bucketMaxCapacity;
         private static int _cleanupRange;
 
-        private Dictionary<uint, ConcurrentDictionary<string, CacheItem>> _map =
+        private readonly Dictionary<uint, ConcurrentDictionary<string, CacheItem>> _map =
             new Dictionary<uint, ConcurrentDictionary<string, CacheItem>>();
 
         public MultiBucketsMemoryCache(uint buckets = 5, uint bucketMaxCapacity = 500000,

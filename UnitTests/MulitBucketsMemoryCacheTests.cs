@@ -9,7 +9,7 @@ namespace UnitTests;
 
 public class MultiBucketsMemoryCacheTests
 {
-    private MultiBucketsMemoryCache _memoryCache;
+    private readonly MultiBucketsMemoryCache _memoryCache;
 
     public MultiBucketsMemoryCacheTests()
     {

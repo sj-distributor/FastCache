@@ -21,4 +21,9 @@
       <ProjectReference Include="..\EasyCache.InMemory\EasyCache.InMemory.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <_ContentIncludedByDefault Remove="Views\Home\Index.cshtml" />
+      <_ContentIncludedByDefault Remove="Views\Home\Tow.cshtml" />
+    </ItemGroup>
+
 </Project>

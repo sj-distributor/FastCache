@@ -91,14 +91,20 @@ jobs:
           token: ${{secrets.CODECOV_TOKEN}}
           file: ${{ github.workspace }}/IntegrationTests/TestResults/**/coverage.cobertura.xml
 
-      - name: Pack
-        run: dotnet pack -p:PackageVersion=${{ steps.gitversion.outputs.SemVer }} --configuration=Release -o artifacts
+#      - name: Pack EasyCache.Core
+#        run: dotnet pack EasyCache.Core -p:PackageVersion=${{ steps.gitversion.outputs.SemVer }} --configuration=Release -o artifacts
+#      - name: Push EasyCache.Core to nuget
+#        run: dotnet nuget push artifacts/EasyCache.Core.${{ steps.gitversion.outputs.SemVer }}.nupkg --skip-duplicate --no-symbols true --api-key ${{secrets.NUGET}} --source https://api.nuget.org/v3/index.json
 
-      - name: Store nupkg
-        uses: actions/upload-artifact@v3
-        with:
-          name: Nuget packages
-          path: artifacts
-
-      - name: Push to nuget
-        run: dotnet nuget push artifacts/NetCoreCache.${{ steps.gitversion.outputs.SemVer }}.nupkg --skip-duplicate --no-symbols true --api-key ${{secrets.NUGET}} --source https://api.nuget.org/v3/index.json
+      - name: Pack EasyCache.InMemory
+        run: dotnet pack EasyCache.InMemory -p:PackageVersion=${{ steps.gitversion.outputs.SemVer }} --configuration=Release -o artifacts
+      - name: Push EasyCache.InMemory to nuget
+        run: dotnet nuget push artifacts/EasyCache.InMemory.${{ steps.gitversion.outputs.SemVer }}.nupkg --skip-duplicate --no-symbols true --api-key ${{secrets.NUGET}} --source https://api.nuget.org/v3/index.json
+        
+      - name: Pack EasyCache.Rediss
+        run: dotnet pack EasyCache.Rediss -p:PackageVersion=${{ steps.gitversion.outputs.SemVer }} --configuration=Release -o artifacts
+      - name: Push EasyCache.Redis to nuget
+        run: dotnet nuget push artifacts/EasyCache.Rediss.${{ steps.gitversion.outputs.SemVer }}.nupkg --skip-duplicate --no-symbols true --api-key ${{secrets.NUGET}} --source https://api.nuget.org/v3/index.json  
+#
+#      - name: Push to nuget
+#        run: dotnet nuget push artifacts/NetCoreCache.${{ steps.gitversion.outputs.SemVer }}.nupkg --skip-duplicate --no-symbols true --api-key ${{secrets.NUGET}} --source https://api.nuget.org/v3/index.json

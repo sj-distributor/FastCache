@@ -15,7 +15,7 @@ namespace EasyCache.InMemory.Drivers
         private readonly MaxMemoryPolicy _maxMemoryPolicy;
         private static int _cleanupRange;
 
-        private static ConcurrentDictionary<string, CacheItem> _dist;
+        private static ConcurrentDictionary<string, CacheItem> _dist = null!;
 
         public MemoryCache(int maxCapacity = 5000000, MaxMemoryPolicy maxMemoryPolicy = MaxMemoryPolicy.LRU,
             int cleanUpPercentage = 10)

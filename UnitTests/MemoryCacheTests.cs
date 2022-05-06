@@ -39,7 +39,7 @@ public class MemoryCacheTests
             }
         }
 
-        Assert.Equal(memoryCache.GetBuckets().Count, 50);
+        Assert.Equal(50, memoryCache.GetBuckets().Count);
         memoryCache.Set("100", new CacheItem()
         {
             Value = 100

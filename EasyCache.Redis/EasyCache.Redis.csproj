@@ -3,7 +3,7 @@
     <PropertyGroup>
         <TargetFramework>netstandard2.1</TargetFramework>
         <Nullable>enable</Nullable>
-        <PackageId>EasyCache.Redis</PackageId>
+        <PackageId>EasyCache.Rediss</PackageId>
         <Authors>Anson.G</Authors>
         <Company>Wiltechs</Company>
     </PropertyGroup>
