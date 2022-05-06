@@ -38,7 +38,7 @@ public class RedisCacheTests
             Value = value,
         }, expire);
 
-        await Task.Delay(TimeSpan.FromSeconds(2));
+        await Task.Delay(TimeSpan.FromSeconds(3));
 
         var s = await _redisClient.Get(key);
         Assert.Equal(s.Value, result);
