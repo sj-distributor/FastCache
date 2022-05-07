@@ -9,11 +9,13 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\EasyCache.Core\EasyCache.Core.csproj" />
+        <ProjectReference Include="..\EasyCache.Core\EasyCache.Core.csproj"/>
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="NewLife.Redis" Version="4.1.2022.501" />
+        <PackageReference Include="AspectCore.Core" Version="2.2.0"/>
+        <PackageReference Include="AspectCore.Extensions.DependencyInjection" Version="2.2.0"/>
+        <PackageReference Include="NewLife.Redis" Version="4.1.2022.501"/>
     </ItemGroup>
 
 </Project>
