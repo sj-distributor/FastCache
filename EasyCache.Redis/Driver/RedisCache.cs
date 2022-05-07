@@ -52,7 +52,7 @@ namespace EasyCache.Redis.Driver
             {
                 if (key.First() == '*')
                 {
-                    key = key.Substring(1, key.Length);
+                    key = key.Substring(1, key.Length - 1);
                 }
                 else if (key.Last() == '*')
                 {

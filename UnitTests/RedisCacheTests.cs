@@ -61,13 +61,27 @@ public class RedisCacheTests
     [Theory]
     [InlineData("anson1111", "18", null)]
     [InlineData("anson2222", "19", null)]
-    public async void TestRedisCacheCanDeleteByPattern(string key, string value, string result)
+    public async void TestRedisCacheCanDeleteByLastPattern(string key, string value, string result)
     {
         await _redisClient.Set(key, new CacheItem()
         {
             Value = value,
         });
         await _redisClient.Delete("anson*");
+        var s = await _redisClient.Get(key);
+        Assert.Equal(s.Value, result);
+    }
+    
+    [Theory]
+    [InlineData("1111Joe", "18", null)]
+    [InlineData("2222Joe", "19", null)]
+    public async void TestRedisCacheCanDeleteByFirstPattern(string key, string value, string result)
+    {
+        await _redisClient.Set(key, new CacheItem()
+        {
+            Value = value,
+        });
+        await _redisClient.Delete("*Joe");
         var s = await _redisClient.Get(key);
         Assert.Equal(s.Value, result);
     }

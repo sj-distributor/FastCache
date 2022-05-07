@@ -1,7 +1,6 @@
 using EasyCache.Core.Attributes;
 using TestApi.DB;
 using TestApi.Entity;
-using TestApi.Utils;
 
 namespace TestApi.Service;
 
@@ -54,11 +53,5 @@ public class UserService : IService
     {
         Thread.Sleep(TimeSpan.FromSeconds(1));
         return _dbContext.Set<User>().ToList();
-    }
-
-    [Cacheable("users", "{number}")]
-    public virtual IEnumerable<User> Performance(string number)
-    {
-        return DataUtils.GetData();
     }
 }

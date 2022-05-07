@@ -6,6 +6,7 @@ using TestApi.Service;
 var builder = WebApplication.CreateBuilder(args);
 builder.Host.UseServiceProviderFactory(new DynamicProxyServiceProviderFactory());
 builder.Services.AddMultiBucketsInMemoryCache();
+// builder.Services.AddInMemoryCache();
 
 builder.Services.RegisterServices();
 

@@ -1,7 +1,7 @@
 # NetCoreCache.Extensions.Redis
 
-[![Build Status](https://github.com/sj-distributor/EasyCache/actions/workflows/dotnet.yml/badge.svg?branch=main)](https://github.com/sj-distributor/EasyCache/actions?query=branch%3Amain)
-[![codecov](https://codecov.io/gh/sj-distributor/EasyCache/branch/master/graph/badge.svg?token=XV3W873RGV)](https://codecov.io/gh/sj-distributor/core-cache.Extensions.Redis)
+[![Build Status](https://github.com/sj-distributor/EasyCache/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/sj-distributor/EasyCache/actions?query=branch%3Amaster)
+[![codecov](https://codecov.io/gh/sj-distributor/EasyCache/branch/master/graph/badge.svg?token=XV3W873RGV)](https://codecov.io/gh/sj-distributor/EasyCache)
 [![NuGet version (NetCoreCache)](https://img.shields.io/nuget/v/NetCoreCacheRedis.svg?style=flat-square)](https://www.nuget.org/packages/NetCoreCacheRedis/)
 ![](https://img.shields.io/badge/license-MIT-green)
 

@@ -72,7 +72,7 @@ namespace EasyCache.InMemory.Drivers
             {
                 if (key.First() == '*')
                 {
-                    key = key.Substring(1, key.Length);
+                    key = key.Substring(1, key.Length - 1);
                 }
                 else if (key.Last() == '*')
                 {
@@ -106,7 +106,7 @@ namespace EasyCache.InMemory.Drivers
             {
                 return bucket;
             }
-
+            
             throw new Exception($"Not Found Bucket: {bucketId}");
         }
 

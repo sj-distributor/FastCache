@@ -82,7 +82,7 @@ public class MultiBucketsMemoryCacheTests
     [Theory]
     [InlineData("anson555", "18", null)]
     [InlineData("anson555555", "19", null)]
-    public async void TestMemoryCacheCanDeleteByPattern(string key, string value, string result)
+    public async void TestMemoryCacheCanDeleteByFirstPattern(string key, string value, string result)
     {
         await _memoryCache.Set(key, new CacheItem()
         {
@@ -90,6 +90,22 @@ public class MultiBucketsMemoryCacheTests
             Expire = DateTime.Now.AddSeconds(20).Ticks
         });
         await _memoryCache.Delete("anson*");
+        var s = await _memoryCache.Get(key);
+        Assert.Equal(s.Value, result);
+    }
+    
+    
+    [Theory]
+    [InlineData("555Joe", "18", null)]
+    [InlineData("555555Joe", "19", null)]
+    public async void TestMemoryCacheCanDeleteByLastPattern(string key, string value, string result)
+    {
+        await _memoryCache.Set(key, new CacheItem()
+        {
+            Value = value,
+            Expire = DateTime.Now.AddSeconds(20).Ticks
+        });
+        await _memoryCache.Delete("*Joe");
         var s = await _memoryCache.Get(key);
         Assert.Equal(s.Value, result);
     }
