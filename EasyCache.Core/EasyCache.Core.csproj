@@ -3,7 +3,7 @@
     <PropertyGroup>
         <TargetFramework>netstandard2.1</TargetFramework>
         <Nullable>enable</Nullable>
-        <PackageId>EasyCache.Core</PackageId>
+        <PackageId>EasyCache.ICore</PackageId>
         <Authors>Anson.G</Authors>
         <Company>Wiltechs</Company>
     </PropertyGroup>

@@ -99,7 +99,7 @@ jobs:
       - name: Pack EasyCache.Core
         run: dotnet pack EasyCache.Core -p:PackageVersion=${{ steps.gitversion.outputs.SemVer }} --configuration=Release -o Core
       - name: Push EasyCache.Core to nuget
-        run: dotnet nuget push Core/EasyCache.Core.${{ steps.gitversion.outputs.SemVer }}.nupkg --skip-duplicate --no-symbols true --api-key ${{secrets.NUGET}} --source https://api.nuget.org/v3/index.json
+        run: dotnet nuget push Core/EasyCache.ICore.${{ steps.gitversion.outputs.SemVer }}.nupkg --skip-duplicate --no-symbols true --api-key ${{secrets.NUGET}} --source https://api.nuget.org/v3/index.json
 
       - name: Pack EasyCache.InMemory
         run: dotnet pack EasyCache.InMemory -p:PackageVersion=${{ steps.gitversion.outputs.SemVer }} --configuration=Release -o InMemory
