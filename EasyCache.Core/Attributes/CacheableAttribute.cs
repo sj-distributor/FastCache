@@ -64,6 +64,7 @@ namespace EasyCache.Core.Attributes
                 Value = context.ReturnValue,
                 CreatedAt = DateTime.Now.Ticks,
                 Expire = _expire > 0 ? DateTime.Now.AddSeconds(_expire).Ticks : DateTime.Now.AddYears(1).Ticks,
+                Type = context.ReturnValue.GetType().GetFullName()
             }, _expire);
         }
     }

@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using EasyCache.Core.Driver;
@@ -30,11 +32,11 @@ namespace EasyCache.Redis.Driver
             if (hasKey) return Task.CompletedTask;
             if (expire > 0)
             {
-                _redisClient.Add(key, JsonConvert.SerializeObject(cacheItem), (int) expire);
+                _redisClient.Add(key, cacheItem, (int)expire);
             }
             else
             {
-                _redisClient.Add(key, JsonConvert.SerializeObject(cacheItem));
+                _redisClient.Add(key, cacheItem);
             }
 
             return Task.CompletedTask;
@@ -43,6 +45,21 @@ namespace EasyCache.Redis.Driver
         public Task<CacheItem> Get(string key)
         {
             var result = _redisClient.Get<CacheItem>(key);
+
+            if (result.Value != null)
+            {
+                var type = result.Value.GetType();
+                if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>)) {         
+                    Console.WriteLine("");
+                }
+                Console.WriteLine("");
+            }
+            else
+            {
+                return Task.FromResult(new CacheItem());
+            }
+
+
             return Task.FromResult(result ?? new CacheItem());
         }
 

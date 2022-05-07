@@ -48,7 +48,7 @@ public class UserService : IService
         return true;
     }
 
-    [Cacheable("users", "{page}", 60)]
+    [Cacheable("users", "{page}", 60 * 10)]
     public virtual IEnumerable<User> List(string page)
     {
         Thread.Sleep(TimeSpan.FromSeconds(1));
