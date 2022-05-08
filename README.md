@@ -2,7 +2,7 @@
 
 [![Build Status](https://github.com/sj-distributor/EasyCache/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/sj-distributor/EasyCache/actions?query=branch%3Amaster)
 [![codecov](https://codecov.io/gh/sj-distributor/EasyCache/branch/master/graph/badge.svg?token=XV3W873RGV)](https://codecov.io/gh/sj-distributor/EasyCache)
-[![NuGet version (NetCoreCache)](https://img.shields.io/nuget/v/NetCoreCacheRedis.svg?style=flat-square)](https://www.nuget.org/packages/NetCoreCacheRedis/)
+[![NuGet version (EasyCache.ICore)](https://img.shields.io/nuget/v/EasyCache.ICore.svg?style=flat-square)](https://www.nuget.org/packages/EasyCache.ICore/)
 ![](https://img.shields.io/badge/license-MIT-green)
 
 ## 🔥Easily to use cache🔥
