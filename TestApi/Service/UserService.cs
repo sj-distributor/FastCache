@@ -20,14 +20,14 @@ public class UserService : IService
         return user;
     }
 
-    [Cacheable("user-single", "{id}", 60 * 30)]
+    [Cacheable("user-single", "{id}", 60 * 10)]
     public virtual User Single(string id)
     {
         Thread.Sleep(TimeSpan.FromSeconds(1));
         return _dbContext.Set<User>().Single(x => x.Id == id);
     }
 
-    [Cacheable("user-single", "{user:id}", 60 * 30)]
+    [Cacheable("user-single", "{user:id}", 60 * 10)]
     [Evictable(new[] { "user-single", "users" }, "{user:id}")]
     public virtual User Update(User user)
     {

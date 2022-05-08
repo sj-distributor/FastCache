@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Json;
+using EasyCache.Core.Driver;
+using EasyCache.Redis.Driver;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using TestApi.DB;
@@ -63,7 +65,8 @@ public class ApiRequestCacheTests : IClassFixture<WebApplicationFactory<Program>
         await resp2.Content.ReadAsStringAsync();
         var end1 = DateTime.Now.Ticks;
 
-        Assert.True(end1 - start1 < 300000);
+        var result = end1 - start1;
+        Assert.True(result < 400000);
     }
 
     [Fact]
@@ -88,6 +91,12 @@ public class ApiRequestCacheTests : IClassFixture<WebApplicationFactory<Program>
     public async void CacheAndEvictOther()
     {
         
+        await _httpClient.PostAsJsonAsync("/", new User()
+        {
+            Id = "5",
+            Name = "anson5"
+        });
+        
         var resp1 = await _httpClient.GetAsync("/users?page=1");
         var result1 = await resp1.Content.ReadAsStringAsync();
 
@@ -104,6 +113,7 @@ public class ApiRequestCacheTests : IClassFixture<WebApplicationFactory<Program>
 
         Assert.NotEqual(result1, result3);
         Assert.Equal(result3, result4);
-        Assert.True(end - start < 300000);
+        var timeResult = end - start;
+        Assert.True(timeResult < 400000);
     }
 }

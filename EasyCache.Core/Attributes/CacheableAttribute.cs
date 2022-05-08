@@ -59,12 +59,15 @@ namespace EasyCache.Core.Attributes
 
             await next(context);
 
+            var returnType = context.ReturnValue.GetType();
+
             await cacheClient.Set(key, new CacheItem
             {
                 Value = context.ReturnValue,
                 CreatedAt = DateTime.Now.Ticks,
                 Expire = _expire > 0 ? DateTime.Now.AddSeconds(_expire).Ticks : DateTime.Now.AddYears(1).Ticks,
-                Type = context.ReturnValue.GetType().GetFullName()
+                AssemblyName = returnType.Assembly.GetName().Name,
+                Type = returnType.FullName ?? string.Empty,
             }, _expire);
         }
     }

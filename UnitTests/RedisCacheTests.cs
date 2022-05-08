@@ -12,7 +12,7 @@ public class RedisCacheTests
 
     public RedisCacheTests()
     {
-        _redisClient = new RedisCache("server=localhost:6379;timeout=5000;MaxMessageSize=1024000;Expire=3600");
+        _redisClient = new RedisCache("server=localhost:6379;timeout=5000;MaxMessageSize=1024000;Expire=3600", true);
     }
 
     [Theory]
@@ -23,6 +23,8 @@ public class RedisCacheTests
         await _redisClient.Set(key, new CacheItem()
         {
             Value = value,
+            AssemblyName = value.GetType().Assembly.GetName().Name,
+            Type = value.GetType().FullName
         }, 20);
         var s = await _redisClient.Get(key);
         Assert.Equal(s.Value, result);
@@ -36,6 +38,8 @@ public class RedisCacheTests
         await _redisClient.Set(key, new CacheItem()
         {
             Value = value,
+            AssemblyName = value.GetType().Assembly.GetName().Name,
+            Type = value.GetType().FullName
         }, expire);
 
         await Task.Delay(TimeSpan.FromSeconds(3));
@@ -52,6 +56,8 @@ public class RedisCacheTests
         await _redisClient.Set(key, new CacheItem()
         {
             Value = value,
+            AssemblyName = value.GetType().Assembly.GetName().Name,
+            Type = value.GetType().FullName
         });
         await _redisClient.Delete(key);
         var s = await _redisClient.Get(key);
@@ -66,6 +72,8 @@ public class RedisCacheTests
         await _redisClient.Set(key, new CacheItem()
         {
             Value = value,
+            AssemblyName = value.GetType().Assembly.GetName().Name,
+            Type = value.GetType().FullName
         });
         await _redisClient.Delete("anson*");
         var s = await _redisClient.Get(key);
@@ -80,9 +88,18 @@ public class RedisCacheTests
         await _redisClient.Set(key, new CacheItem()
         {
             Value = value,
+            AssemblyName = value.GetType().Assembly.GetName().Name,
+            Type = value.GetType().FullName
         });
         await _redisClient.Delete("*Joe");
         var s = await _redisClient.Get(key);
         Assert.Equal(s.Value, result);
+    }
+
+    [Fact]
+    public void TestCanGetRedisClient()
+    {
+        var redisClient = _redisClient.GetRedisClient();
+        Assert.NotNull(redisClient);
     }
 }

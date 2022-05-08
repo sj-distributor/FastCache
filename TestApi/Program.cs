@@ -1,5 +1,4 @@
 using AspectCore.Extensions.DependencyInjection;
-using EasyCache.InMemory.Setup;
 using EasyCache.Redis.Setup;
 using TestApi.DB;
 using TestApi.Service;
