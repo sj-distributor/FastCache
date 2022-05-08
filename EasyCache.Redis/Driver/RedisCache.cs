@@ -1,4 +1,5 @@
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using EasyCache.Core.Driver;
 using EasyCache.Core.Entity;
@@ -28,13 +29,19 @@ namespace EasyCache.Redis.Driver
         {
             var hasKey = _redisClient.ContainsKey(key);
             if (hasKey) return Task.CompletedTask;
+
+            if (cacheItem.Value != null)
+            {
+                cacheItem.Value = JsonConvert.SerializeObject(cacheItem.Value);
+            }
+            
             if (expire > 0)
             {
-                _redisClient.Add(key, JsonConvert.SerializeObject(cacheItem), (int) expire);
+                _redisClient.Add(key, cacheItem, (int)expire);
             }
             else
             {
-                _redisClient.Add(key, JsonConvert.SerializeObject(cacheItem));
+                _redisClient.Add(key, cacheItem);
             }
 
             return Task.CompletedTask;
@@ -43,7 +50,21 @@ namespace EasyCache.Redis.Driver
         public Task<CacheItem> Get(string key)
         {
             var result = _redisClient.Get<CacheItem>(key);
-            return Task.FromResult(result ?? new CacheItem());
+
+            if (result?.Value != null)
+            {
+                if (result.AssemblyName == null) return Task.FromResult(new CacheItem());
+                var assembly = Assembly.Load(result.AssemblyName);
+                if (result.Type == null) return Task.FromResult(new CacheItem());
+                var valueType = assembly.GetType(result.Type, true, true);
+                result.Value = JsonConvert.DeserializeObject(result.Value as string, valueType);
+
+                return Task.FromResult(result);
+            }
+            else
+            {
+                return Task.FromResult(new CacheItem());
+            }
         }
 
         public Task Delete(string key)
