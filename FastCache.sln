@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EasyCache.Core", "EasyCache.Core\EasyCache.Core.csproj", "{D86CCBD1-2B2C-4304-91E9-86D17B38F12C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FastCache.Core", "FastCache.Core\FastCache.Core.csproj", "{D86CCBD1-2B2C-4304-91E9-86D17B38F12C}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{D2E7881C-5003-4E0A-AAB5-BF41250B2D9A}"
 EndProject
@@ -10,9 +10,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestApi", "TestApi\TestApi.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IntegrationTests", "IntegrationTests\IntegrationTests.csproj", "{0BA65C61-16AA-416D-910C-4BA4B23EA268}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EasyCache.InMemory", "EasyCache.InMemory\EasyCache.InMemory.csproj", "{0CB1D473-2870-4744-B10F-F5ECEC95055C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FastCache.InMemory", "FastCache.InMemory\FastCache.InMemory.csproj", "{0CB1D473-2870-4744-B10F-F5ECEC95055C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EasyCache.Redis", "EasyCache.Redis\EasyCache.Redis.csproj", "{C703ED69-BFAA-4279-9E79-0BA393C4E1E4}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FastCache.Redis", "FastCache.Redis\FastCache.Redis.csproj", "{C703ED69-BFAA-4279-9E79-0BA393C4E1E4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -3,9 +3,10 @@
     <PropertyGroup>
         <TargetFramework>netstandard2.1</TargetFramework>
         <Nullable>enable</Nullable>
-        <PackageId>EasyCache.ICore</PackageId>
+        <PackageId>FastCache.Core</PackageId>
         <Authors>Anson.G</Authors>
         <Company>Wiltechs</Company>
+        <RootNamespace>FastCache.Core</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
