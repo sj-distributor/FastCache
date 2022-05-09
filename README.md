@@ -1,6 +1,6 @@
-[![Build Status](https://github.com/sj-distributor/EasyCache/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/sj-distributor/EasyCache/actions?query=branch%3Amaster)
-[![codecov](https://codecov.io/gh/sj-distributor/EasyCache/branch/master/graph/badge.svg?token=XV3W873RGV)](https://codecov.io/gh/sj-distributor/EasyCache)
-[![NuGet version (EasyCache.ICore)](https://img.shields.io/nuget/v/EasyCache.ICore.svg?style=flat-square)](https://www.nuget.org/packages/EasyCache.ICore/)
+[![Build Status](https://github.com/sj-distributor/FastCache/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/sj-distributor/FastCache/actions?query=branch%3Amaster)
+[![codecov](https://codecov.io/gh/sj-distributor/FastCache/branch/master/graph/badge.svg?token=XV3W873RGV)](https://codecov.io/gh/sj-distributor/FastCache)
+[![NuGet version (FastCache.Core)](https://img.shields.io/nuget/v/FastCache.ICore.svg?style=flat-square)](https://www.nuget.org/packages/FastCache.ICore/)
 ![](https://img.shields.io/badge/license-MIT-green)
 
 ## 🔥Easily to use cache🔥
@@ -12,8 +12,8 @@
 ## 🤟 Install
 Choose caching provider that you need and install it via Nuget.
 ```
-Install-Package EasyCache.InMemory
-Install-Package EasyCache.Rediss
+Install-Package FastCache.InMemory
+Install-Package FastCache.Redis
 ```
 
 ## 🚀 Quick start
@@ -46,7 +46,7 @@ public virtual User Single(string id)
 * Fast. Performance scales on multi-core CPUs.
 * The cache consists of many buckets, each with its own lock. This helps scaling the performance on multi-core CPUs,
   since multiple CPUs may concurrently access distinct buckets.
-* `EasyCache.InMemory` automatically evicts old entries when reaching the maximum cache size set on its creation.
+* `FastCache.InMemory` automatically evicts old entries when reaching the maximum cache size set on its creation.
 
 
 ## 📌 Redis cluster

@@ -3,13 +3,14 @@
     <PropertyGroup>
         <TargetFramework>netstandard2.1</TargetFramework>
         <Nullable>enable</Nullable>
-        <PackageId>EasyCache.InMemory</PackageId>
+        <PackageId>FastCache.InMemory</PackageId>
         <Authors>Anson.G</Authors>
         <Company>Wiltechs</Company>
+        <RootNamespace>EasyCache.InMemory</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\EasyCache.Core\EasyCache.Core.csproj"/>
+        <ProjectReference Include="..\FastCache.Core\FastCache.Core.csproj" />
     </ItemGroup>
 
 </Project>

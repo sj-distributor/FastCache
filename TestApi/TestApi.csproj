@@ -18,8 +18,8 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\EasyCache.InMemory\EasyCache.InMemory.csproj" />
-      <ProjectReference Include="..\EasyCache.Redis\EasyCache.Redis.csproj" />
+      <ProjectReference Include="..\FastCache.InMemory\FastCache.InMemory.csproj" />
+      <ProjectReference Include="..\FastCache.Redis\FastCache.Redis.csproj" />
     </ItemGroup>
 
     <ItemGroup>
