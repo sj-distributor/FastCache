@@ -1,6 +1,6 @@
 [![Build Status](https://github.com/sj-distributor/FastCache/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/sj-distributor/FastCache/actions?query=branch%3Amaster)
 [![codecov](https://codecov.io/gh/sj-distributor/FastCache/branch/master/graph/badge.svg?token=XV3W873RGV)](https://codecov.io/gh/sj-distributor/FastCache)
-[![NuGet version (FastCache.Core)](https://img.shields.io/nuget/v/FastCache.ICore.svg?style=flat-square)](https://www.nuget.org/packages/FastCache.ICore/)
+[![NuGet version (FastCache.Core)](https://img.shields.io/nuget/v/FastCache.Core.svg?style=flat-square)](https://www.nuget.org/packages/FastCache.Core/)
 ![](https://img.shields.io/badge/license-MIT-green)
 
 ## 🔥Easily to use cache🔥
