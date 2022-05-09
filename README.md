@@ -13,7 +13,7 @@
 Choose caching provider that you need and install it via Nuget.
 ```
 Install-Package EasyCache.InMemory
-Install-Package EasyCache.Redis
+Install-Package EasyCache.Rediss
 ```
 
 ## 🚀 Quick start
