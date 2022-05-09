@@ -25,7 +25,8 @@ builder.Host.UseServiceProviderFactory(new DynamicProxyServiceProviderFactory())
 builder.Services.AddInMemoryCache(); // InMemory
 
 // builder.Services.AddMultiBucketsInMemoryCache(); // Big cache
-// builder.Services.AddRedisCache("server=localhost:6379;timeout=5000;MaxMessageSize=1024000;Expire=3600") // Redis 
+// builder.Services.AddRedisCache("server=localhost:6379;timeout=5000;MaxMessageSize=1024000;Expire=3600", canGetRedisClient: true) // canGetRedisClient = true => get redisClient instance
+// var redisClient = serviceProvider.GetService<ICacheClient>();
 
 // UserService.cs
 [Cacheable("user-single", "{id}", 60 * 30)]
