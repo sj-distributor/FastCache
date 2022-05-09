@@ -8,10 +8,11 @@ namespace EasyCache.Redis.Setup
     {
         public static void AddRedisCache(
             this IServiceCollection services,
-            string connectionString
+            string connectionString,
+            bool canGetRedisClient = false
         )
         {
-            services.AddSingleton<ICacheClient>(new RedisCache(connectionString));
+            services.AddSingleton<ICacheClient>(new RedisCache(connectionString, canGetRedisClient));
         }
     }
 }

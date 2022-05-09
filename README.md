@@ -106,7 +106,7 @@ public class UserService
 public class UserService
 {
     [Cacheable("user-single", "{user:id}", 60 * 30)]
-    [Evictable(new[] { "user-single", "other cache name" }, "{user:id}")] // 
+    [Evictable(new[] { "user-single", "other cache name" }, "{user:id}")] 
     public virtual User Update(User user)
     {
         // Update logic...

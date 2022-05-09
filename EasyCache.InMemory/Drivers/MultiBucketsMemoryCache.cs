@@ -151,9 +151,7 @@ namespace EasyCache.InMemory.Drivers
 
         private uint HashKey(string key)
         {
-            byte[] encoded = SHA256.Create().ComputeHash(Encoding.UTF8.GetBytes(key));
-            var value = BitConverter.ToUInt32(encoded, 0) % _buckets;
-            return value;
+            return BitConverter.ToUInt32(SHA256.Create().ComputeHash(Encoding.UTF8.GetBytes(key)), 0) % _buckets;
         }
     }
 }

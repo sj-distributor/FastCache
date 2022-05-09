@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Json;
-using EasyCache.Core.Driver;
-using EasyCache.Redis.Driver;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using TestApi.DB;
@@ -114,6 +112,6 @@ public class ApiRequestCacheTests : IClassFixture<WebApplicationFactory<Program>
         Assert.NotEqual(result1, result3);
         Assert.Equal(result3, result4);
         var timeResult = end - start;
-        Assert.True(timeResult < 400000);
+        Assert.True(timeResult < 500000);
     }
 }
