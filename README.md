@@ -25,11 +25,12 @@ builder.Host.UseServiceProviderFactory(new DynamicProxyServiceProviderFactory())
 builder.Services.AddInMemoryCache(); // InMemory
 
 // builder.Services.AddMultiBucketsInMemoryCache(); // Big cache
-// builder.Services.AddRedisCache("server=localhost:6379;timeout=5000;MaxMessageSize=1024000;Expire=3600", canGetRedisClient: true) // canGetRedisClient = true => get redisClient instance
+// builder.Services.AddRedisCache("server=localhost:6379;timeout=5000;MaxMessageSize=1024000;Expire=3600", canGetRedisClient: true) 
+// canGetRedisClient = true => get redisClient instance
 // var redisClient = serviceProvider.GetService<ICacheClient>();
 
 // UserService.cs
-[Cacheable("user-single", "{id}", 60 * 30)]
+[Cacheable("user-single", "{id}", 60 * 30)] // Cache expires after two seconds
 public virtual User Single(string id)
 {
     return _dbContext.Set<User>().Single(x => x.Id == id);
@@ -104,7 +105,13 @@ public class UserService
 // UserService.cs
 public class UserService
 {
-    [Cacheable("user-single", "{user:id}", 60 * 30)]
+    [Cacheable("user-single", "{id}")] // cache never expires
+    public virtual User Single(string id)
+    {
+        // Get User logic...
+    }
+    
+    [Cacheable("user-single", "{user:id}")]
     [Evictable(new[] { "user-single", "other cache name" }, "{user:id}")] 
     public virtual User Update(User user)
     {
@@ -117,6 +124,15 @@ public class UserService
 The Update method will be executed first. 
 After the method is successfully executed, the setup cache will be invalidated,
 and finally the Cacheable operation will be executed.
+
+STEP:
+1. When "user:id" = 123
+2. Then Evict cache: "user-single:123"
+3. Then After updated will caching:  "user-single:123" -> { latest user data }
+
+
+🚀 This means that the cache will always be kept up to date,
+thus triggering queries to the database will be significantly reduced 🚀 
 
 **********************************************
 ```

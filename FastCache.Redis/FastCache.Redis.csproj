@@ -6,7 +6,7 @@
         <PackageId>FastCache.Redis</PackageId>
         <Authors>Anson.G</Authors>
         <Company>Wiltechs</Company>
-        <RootNamespace>EasyCache.Redis</RootNamespace>
+        <RootNamespace>FastCache.Redis</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>

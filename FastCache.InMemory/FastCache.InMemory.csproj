@@ -6,7 +6,7 @@
         <PackageId>FastCache.InMemory</PackageId>
         <Authors>Anson.G</Authors>
         <Company>Wiltechs</Company>
-        <RootNamespace>EasyCache.InMemory</RootNamespace>
+        <RootNamespace>FastCache.InMemory</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
