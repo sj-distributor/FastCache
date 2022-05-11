@@ -41,6 +41,33 @@ public virtual User Single(string id)
 **********************************
 ```
 
+##☀️ Use in Controller
+```C#
+// Program.cs
+var builder = WebApplication.CreateBuilder(args);
+builder.Host.UseServiceProviderFactory(new DynamicProxyServiceProviderFactory());
+builder.Services.AddInMemoryCache(); // InMemory
+
+builder.Services.AddMvc().AddControllersAsServices(); 
+
+// UserService.cs
+[ApiController]
+[Route("/user")]
+[Cacheable("user-single", "{id}", 60 * 10)]
+public class UserController : ControllerBase
+{
+    [Route("/"), HttpGet]
+    [Cacheable("user-single", "{id}", 60 * 10)]
+    public virtual User Get(string id)
+    {
+        return _userService.Single(id);
+    }
+}
+**********************************
+***** Method must be virtual *****
+**********************************
+```
+
 ## ⏱ About Cache expiration ( For InMemory )
 * There are three ways of cache eviction, `LRU` and `TTL` and `Random`
 
