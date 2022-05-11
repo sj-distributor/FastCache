@@ -5,11 +5,11 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
-using EasyCache.Core.Driver;
-using EasyCache.Core.Entity;
-using EasyCache.InMemory.Enum;
+using FastCache.Core.Driver;
+using FastCache.Core.Entity;
+using FastCache.InMemory.Enum;
 
-namespace EasyCache.InMemory.Drivers
+namespace FastCache.InMemory.Drivers
 {
     public class MultiBucketsMemoryCache : ICacheClient
     {

@@ -1,4 +1,4 @@
-using EasyCache.Core.Attributes;
+using FastCache.Core.Attributes;
 using TestApi.DB;
 using TestApi.Entity;
 
@@ -38,6 +38,7 @@ public class UserService : IService
         return first;
     }
 
+    [Cacheable("user-single", "{user:id}", 60 * 10)]
     [Evictable(new[] { "user-single", "users" }, "{id}")]
     public virtual bool Delete(string id)
     {

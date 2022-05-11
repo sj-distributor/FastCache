@@ -1,17 +1,18 @@
 using AspectCore.Extensions.DependencyInjection;
-using EasyCache.InMemory.Setup;
-using EasyCache.Redis.Setup;
+using FastCache.InMemory.Setup;
 using TestApi.DB;
 using TestApi.Service;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Host.UseServiceProviderFactory(new DynamicProxyServiceProviderFactory());
+
 // builder.Services.AddMultiBucketsInMemoryCache();
 builder.Services.AddInMemoryCache();
 // builder.Services.AddRedisCache("server=localhost:6379;timeout=5000;MaxMessageSize=1024000;Expire=3600");
 
 builder.Services.RegisterServices();
+
 
 // Add services to the container.
 builder.Services.AddControllers();
@@ -31,6 +32,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
 
 app.UseHttpsRedirection();
 

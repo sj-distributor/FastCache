@@ -1,11 +1,11 @@
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using EasyCache.Core.Driver;
-using EasyCache.Core.Entity;
+using FastCache.Core.Driver;
+using FastCache.Core.Entity;
 using Newtonsoft.Json;
 
-namespace EasyCache.Redis.Driver
+namespace FastCache.Redis.Driver
 {
     public class RedisCache : ICacheClient
     {

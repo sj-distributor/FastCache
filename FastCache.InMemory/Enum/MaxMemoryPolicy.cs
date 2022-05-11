@@ -1,4 +1,4 @@
-namespace EasyCache.InMemory.Enum
+namespace FastCache.InMemory.Enum
 {
     public enum MaxMemoryPolicy
     {

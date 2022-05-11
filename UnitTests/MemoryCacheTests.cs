@@ -1,8 +1,8 @@
 using System;
 using System.Threading;
-using EasyCache.Core.Entity;
-using EasyCache.InMemory.Drivers;
-using EasyCache.InMemory.Enum;
+using FastCache.Core.Entity;
+using FastCache.InMemory.Drivers;
+using FastCache.InMemory.Enum;
 using Xunit;
 
 namespace UnitTests;

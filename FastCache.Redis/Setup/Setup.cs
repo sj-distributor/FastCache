@@ -1,8 +1,8 @@
-using EasyCache.Core.Driver;
-using EasyCache.Redis.Driver;
+using FastCache.Core.Driver;
+using FastCache.Redis.Driver;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace EasyCache.Redis.Setup
+namespace FastCache.Redis.Setup
 {
     public static class Setup
     {

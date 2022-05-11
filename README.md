@@ -126,9 +126,9 @@ After the method is successfully executed, the setup cache will be invalidated,
 and finally the Cacheable operation will be executed.
 
 STEP:
-1. When "user:id" = 123
-2. Then Evict cache: "user-single:123"
-3. Then After updated will caching:  "user-single:123" -> { latest user data }
+ 1. When "user:id" = 123
+ 2. Then Evict cache: "user-single:123"
+ 3. Then After updated will caching:  "user-single:123" -> { latest user data }
 
 
 🚀 This means that the cache will always be kept up to date,

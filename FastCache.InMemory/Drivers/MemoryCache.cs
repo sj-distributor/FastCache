@@ -3,11 +3,11 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using EasyCache.Core.Driver;
-using EasyCache.Core.Entity;
-using EasyCache.InMemory.Enum;
+using FastCache.Core.Driver;
+using FastCache.Core.Entity;
+using FastCache.InMemory.Enum;
 
-namespace EasyCache.InMemory.Drivers
+namespace FastCache.InMemory.Drivers
 {
     public class MemoryCache : ICacheClient
     {

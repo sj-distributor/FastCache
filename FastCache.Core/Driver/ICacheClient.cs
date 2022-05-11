@@ -1,7 +1,7 @@
 using System.Threading.Tasks;
-using EasyCache.Core.Entity;
+using FastCache.Core.Entity;
 
-namespace EasyCache.Core.Driver
+namespace FastCache.Core.Driver
 {
     public interface ICacheClient
     {

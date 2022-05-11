@@ -6,7 +6,7 @@ using System.Text.RegularExpressions;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 
-namespace EasyCache.Core.Utils
+namespace FastCache.Core.Utils
 {
     public static class KeyGenerateHelper
     {

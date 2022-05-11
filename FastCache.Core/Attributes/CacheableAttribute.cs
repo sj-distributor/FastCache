@@ -2,12 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using AspectCore.DynamicProxy;
-using EasyCache.Core.Driver;
-using EasyCache.Core.Entity;
-using EasyCache.Core.Utils;
+using FastCache.Core.Driver;
+using FastCache.Core.Entity;
+using FastCache.Core.Utils;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace EasyCache.Core.Attributes
+namespace FastCache.Core.Attributes
 {
     public class CacheableAttribute : AbstractInterceptorAttribute
     {

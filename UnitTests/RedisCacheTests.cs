@@ -1,7 +1,7 @@
 using System;
 using System.Threading.Tasks;
-using EasyCache.Core.Entity;
-using EasyCache.Redis.Driver;
+using FastCache.Core.Entity;
+using FastCache.Redis.Driver;
 using Xunit;
 
 namespace UnitTests;

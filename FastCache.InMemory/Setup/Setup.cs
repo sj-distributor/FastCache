@@ -1,9 +1,11 @@
-using EasyCache.Core.Driver;
-using EasyCache.InMemory.Drivers;
-using EasyCache.InMemory.Enum;
+using System;
+using AspectCore.Extensions.DependencyInjection;
+using FastCache.Core.Driver;
+using FastCache.InMemory.Drivers;
+using FastCache.InMemory.Enum;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace EasyCache.InMemory.Setup
+namespace FastCache.InMemory.Setup
 {
     public static class Setup
     {

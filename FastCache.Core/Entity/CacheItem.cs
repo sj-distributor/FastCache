@@ -1,4 +1,4 @@
-namespace EasyCache.Core.Entity
+namespace FastCache.Core.Entity
 {
     public class CacheItem
     {
