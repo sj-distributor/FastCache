@@ -41,7 +41,7 @@ public virtual User Single(string id)
 **********************************
 ```
 
-##☀️ Use in Controller
+## ☀️ Use in Controller
 ```C#
 // Program.cs
 var builder = WebApplication.CreateBuilder(args);
@@ -153,7 +153,7 @@ After the method is successfully executed, the setup cache will be invalidated,
 and finally the Cacheable operation will be executed.
 
 STEP:
- 1. When "user:id" = 123
+ 1. When "user:id" = "123"
  2. Then Evict cache: "user-single:123"
  3. Then After updated will caching:  "user-single:123" -> { latest user data }
 
