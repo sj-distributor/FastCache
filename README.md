@@ -48,12 +48,11 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Host.UseServiceProviderFactory(new DynamicProxyServiceProviderFactory());
 builder.Services.AddInMemoryCache(); // InMemory
 
-builder.Services.AddMvc().AddControllersAsServices(); 
+builder.Services.AddMvc().AddControllersAsServices(); // the key point
 
-// UserService.cs
+// UserController.cs
 [ApiController]
 [Route("/user")]
-[Cacheable("user-single", "{id}", 60 * 10)]
 public class UserController : ControllerBase
 {
     [Route("/"), HttpGet]
