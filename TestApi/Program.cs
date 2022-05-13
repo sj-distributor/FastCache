@@ -1,4 +1,7 @@
+using AspectCore.Extensions.Autofac;
 using AspectCore.Extensions.DependencyInjection;
+using Autofac;
+using Autofac.Extensions.DependencyInjection;
 using FastCache.InMemory.Setup;
 using TestApi.DB;
 using TestApi.Service;
@@ -7,12 +10,19 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Host.UseServiceProviderFactory(new DynamicProxyServiceProviderFactory());
 
+// builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory());
+// builder.Host.ConfigureContainer<ContainerBuilder>(build =>
+// {
+//     build.RegisterDynamicProxy();
+// });
+
+// builder.Services.AddMvc().AddControllersAsServices();
+
 // builder.Services.AddMultiBucketsInMemoryCache();
 builder.Services.AddInMemoryCache();
 // builder.Services.AddRedisCache("server=localhost:6379;timeout=5000;MaxMessageSize=1024000;Expire=3600");
 
 builder.Services.RegisterServices();
-
 
 // Add services to the container.
 builder.Services.AddControllers();
@@ -41,4 +51,5 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
 public partial class Program { }

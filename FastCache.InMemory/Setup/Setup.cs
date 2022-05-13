@@ -1,5 +1,3 @@
-using System;
-using AspectCore.Extensions.DependencyInjection;
 using FastCache.Core.Driver;
 using FastCache.InMemory.Drivers;
 using FastCache.InMemory.Enum;

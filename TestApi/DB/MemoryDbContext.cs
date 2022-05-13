@@ -7,7 +7,6 @@ public class MemoryDbContext : DbContext
 {
     public MemoryDbContext(DbContextOptions<MemoryDbContext> options) : base(options)
     {
-        
     }
     
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

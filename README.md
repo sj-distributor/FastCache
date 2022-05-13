@@ -41,6 +41,15 @@ public virtual User Single(string id)
 **********************************
 ```
 
+## 📚 Support Autofac
+```C#
+builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory());
+builder.Host.ConfigureContainer<ContainerBuilder>(build =>
+{
+    build.RegisterDynamicProxy();
+});
+```
+
 ## ☀️ Use in Controller
 ```C#
 // Program.cs
