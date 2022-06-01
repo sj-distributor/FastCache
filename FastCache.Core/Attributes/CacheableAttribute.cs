@@ -45,23 +45,17 @@ namespace FastCache.Core.Attributes
 
             if (methodInfo.CustomAttributes.Any())
             {
-                foreach (var customAttributeData in methodInfo.CustomAttributes)
+                if (methodInfo.CustomAttributes.Any(customAttributeData => customAttributeData.AttributeType.FullName == typeof(EvictableAttribute).FullName))
                 {
-                    if (customAttributeData.AttributeType.FullName == typeof(EvictableAttribute).FullName)
-                    {
-                        canGetCache = false;
-                    }
+                    canGetCache = false;
                 }
             }
 
             if (canGetCache)
             {
-                foreach (var customAttribute in context.ProxyMethod.CustomAttributes)
+                if (context.ProxyMethod.CustomAttributes.Any(customAttribute => customAttribute.AttributeType.FullName == typeof(EvictableAttribute).FullName))
                 {
-                    if (customAttribute.AttributeType.FullName == typeof(EvictableAttribute).FullName)
-                    {
-                        canGetCache = false;
-                    }
+                    canGetCache = false;
                 }
             }
 
