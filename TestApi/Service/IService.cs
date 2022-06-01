@@ -10,8 +10,6 @@ public static class RegisterService
         this IServiceCollection services
     )
     {
-        typeof(RegisterService).Assembly.GetTypes()
-            .Where(x => typeof(IService).IsAssignableFrom(x) && x.IsClass)
-            .ToList().ForEach(x => { services.AddScoped(x); });
+        services.AddScoped<IUserService, UserService>();
     }
 }

@@ -73,11 +73,14 @@ public class ApiRequestCacheTests : IClassFixture<WebApplicationFactory<Program>
         var resp1 = await _httpClient.GetAsync("/?id=3");
         var result1 = await resp1.Content.ReadAsStringAsync();
 
-        await _httpClient.PutAsJsonAsync("/?id=3", new User()
+        var resultForPost = await _httpClient.PutAsJsonAsync("/?id=3", new User()
         {
             Id = "3",
             Name = "anson33"
         });
+
+        var stringAsync = await resultForPost.Content.ReadAsStringAsync();
+        Assert.NotEqual(stringAsync, result1);
 
         var resp2 = await _httpClient.GetAsync("/?id=3");
         var result2 = await resp2.Content.ReadAsStringAsync();

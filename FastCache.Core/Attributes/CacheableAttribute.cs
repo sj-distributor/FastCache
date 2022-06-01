@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using AspectCore.DynamicProxy;
 using FastCache.Core.Driver;
@@ -37,12 +39,29 @@ namespace FastCache.Core.Attributes
 
             var key = KeyGenerateHelper.GetKey(_key, _expression, dictionary);
 
+            var methodInfo = context.Implementation.GetType().GetMethods().First(x => x.Name == context.ProxyMethod.Name);
+
             var canGetCache = true;
-            foreach (var customAttribute in context.ProxyMethod.CustomAttributes)
+
+            if (methodInfo.CustomAttributes.Any())
             {
-                if (customAttribute.AttributeType.FullName == typeof(EvictableAttribute).FullName)
+                foreach (var customAttributeData in methodInfo.CustomAttributes)
                 {
-                    canGetCache = false;
+                    if (customAttributeData.AttributeType.FullName == typeof(EvictableAttribute).FullName)
+                    {
+                        canGetCache = false;
+                    }
+                }
+            }
+
+            if (canGetCache)
+            {
+                foreach (var customAttribute in context.ProxyMethod.CustomAttributes)
+                {
+                    if (customAttribute.AttributeType.FullName == typeof(EvictableAttribute).FullName)
+                    {
+                        canGetCache = false;
+                    }
                 }
             }
 

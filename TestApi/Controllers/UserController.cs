@@ -8,17 +8,17 @@ namespace TestApi.Controllers;
 [Route("/user", Name = "/user")]
 public class UserController : ControllerBase
 {
-    private readonly UserService _userService;
+    private readonly IUserService _userService;
 
-    public UserController(UserService userService)
+    public UserController(IUserService userService)
     {
         _userService = userService;
     }
 
     [Route("/"), HttpGet]
-    public virtual User Get(string id)
+    public virtual async Task<User> Get(string id)
     {
-        return _userService.Single(id);
+        return await _userService.Single(id);
     }
 
     [Route("/"), HttpPost]
@@ -28,9 +28,9 @@ public class UserController : ControllerBase
     }
 
     [Route("/"), HttpPut]
-    public User Update(User user)
+    public async Task<User> Update(User user)
     {
-        return _userService.Update(user);
+        return await _userService.Update(user);
     }
 
     [Route("/"), HttpDelete]
