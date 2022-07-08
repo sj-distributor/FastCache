@@ -5,20 +5,21 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using AspectCore.DynamicProxy;
+using FastCache.Core.Attributes;
 using FastCache.Core.Driver;
 using FastCache.Core.Entity;
+using FastCache.Core.Enums;
 using FastCache.Core.Utils;
 using Microsoft.Extensions.DependencyInjection;
-using Newtonsoft.Json;
 
-namespace FastCache.Core.Attributes
+namespace FastCache.MultiSource.Attributes
 {
-    public class CacheableAttribute : AbstractInterceptorAttribute
+    public class MultiSourceCacheableAttribute : AbstractInterceptorAttribute
     {
         private readonly string _key;
         private readonly string _expression;
+        private readonly Target _target;
         private readonly long _expire;
-        
         public sealed override int Order { get; set; }
         
         private static readonly ConcurrentDictionary<Type, MethodInfo>
@@ -26,23 +27,36 @@ namespace FastCache.Core.Attributes
         
         private static readonly MethodInfo _taskResultMethod;
 
-        static CacheableAttribute()
+        static MultiSourceCacheableAttribute()
         {
             _taskResultMethod = typeof(Task).GetMethods()
                 .First(p => p.Name == "FromResult" && p.ContainsGenericParameters);
         }
 
-        public CacheableAttribute(string key, string expression, long expire = 0)
+        public MultiSourceCacheableAttribute(string key, string expression, Target target, long expire = 0)
         {
             _key = key;
             _expression = expression;
+            _target = target;
             _expire = expire;
             Order = 2;
         }
 
         public override async Task Invoke(AspectContext context, AspectDelegate next)
         {
-            var cacheClient = context.ServiceProvider.GetService<ICacheClient>();
+            ICacheClient cacheClient;
+
+            switch (_target)
+            {
+                case Target.Redis:
+                    cacheClient = context.ServiceProvider.GetService<IRedisCache>();
+                    break;
+                case Target.InMemory:
+                    cacheClient = context.ServiceProvider.GetService<IMemoryCache>();
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
 
             var dictionary = new Dictionary<string, object>();
             var parameterInfos = context.ImplementationMethod.GetParameters();
@@ -61,7 +75,7 @@ namespace FastCache.Core.Attributes
             if (methodInfo.CustomAttributes.Any())
             {
                 if (methodInfo.CustomAttributes.Any(customAttributeData =>
-                        customAttributeData.AttributeType.FullName == typeof(EvictableAttribute).FullName))
+                        customAttributeData.AttributeType.FullName == typeof(MultiSourceEvictableAttribute).FullName))
                 {
                     canGetCache = false;
                 }
@@ -70,7 +84,7 @@ namespace FastCache.Core.Attributes
             if (canGetCache)
             {
                 if (context.ProxyMethod.CustomAttributes.Any(customAttribute =>
-                        customAttribute.AttributeType.FullName == typeof(EvictableAttribute).FullName))
+                        customAttribute.AttributeType.FullName == typeof(MultiSourceEvictableAttribute).FullName))
                 {
                     canGetCache = false;
                 }
@@ -89,6 +103,7 @@ namespace FastCache.Core.Attributes
                     context.ReturnValue =  context.IsAsync() ? TypeofTaskResultMethod.GetOrAdd(returnTypeBefore,
                             t => _taskResultMethod.MakeGenericMethod(returnTypeBefore))
                         .Invoke(null, new [] { cacheValue.Value }) : cacheValue.Value;
+                        
                     return;
                 }
             }

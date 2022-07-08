@@ -110,6 +110,11 @@ jobs:
         run: dotnet pack FastCache.Redis -p:PackageVersion=${{ steps.gitversion.outputs.SemVer }} --configuration=Release -o Redis
       - name: Push FastCache.Redis to nuget
         run: dotnet nuget push Redis/FastCache.Redis.${{ steps.gitversion.outputs.SemVer }}.nupkg --skip-duplicate --no-symbols true --api-key ${{secrets.NUGET}} --source https://api.nuget.org/v3/index.json  
+        
+      - name: Pack FastCache.MultiSource
+        run: dotnet pack FastCache.MultiSource -p:PackageVersion=${{ steps.gitversion.outputs.SemVer }} --configuration=Release -o MultiSource
+      - name: Push FastCache.Redis to nuget
+        run: dotnet nuget push MultiSource/FastCache.MultiSource.${{ steps.gitversion.outputs.SemVer }}.nupkg --skip-duplicate --no-symbols true --api-key ${{secrets.NUGET}} --source https://api.nuget.org/v3/index.json
 
 #      - name: Push to nuget
 #        run: dotnet nuget push artifacts/NetCoreCache.${{ steps.gitversion.outputs.SemVer }}.nupkg --skip-duplicate --no-symbols true --api-key ${{secrets.NUGET}} --source https://api.nuget.org/v3/index.json

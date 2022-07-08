@@ -9,7 +9,7 @@ using FastCache.InMemory.Enum;
 
 namespace FastCache.InMemory.Drivers
 {
-    public class MemoryCache : ICacheClient
+    public class MemoryCache : IMemoryCache
     {
         private readonly int _maxCapacity;
         private readonly MaxMemoryPolicy _maxMemoryPolicy;

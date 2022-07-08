@@ -21,6 +21,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\FastCache.InMemory\FastCache.InMemory.csproj" />
+      <ProjectReference Include="..\FastCache.MultiSource\FastCache.MultiSource.csproj" />
       <ProjectReference Include="..\FastCache.Redis\FastCache.Redis.csproj" />
     </ItemGroup>
 

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -12,11 +13,11 @@ using Xunit;
 namespace IntegrationTests;
 
 [Collection("Sequential")]
-public class ApiRequestCacheTests : IClassFixture<WebApplicationFactory<Program>>
+public class UserApiRequestCacheTests : IClassFixture<WebApplicationFactory<Program>>
 {
     private readonly HttpClient _httpClient;
 
-    public ApiRequestCacheTests(WebApplicationFactory<Program> factory)
+    public UserApiRequestCacheTests(WebApplicationFactory<Program> factory)
     {
         _httpClient = factory.CreateClient();
         var memoryDbContext = factory.Services.GetService<MemoryDbContext>();
@@ -44,7 +45,7 @@ public class ApiRequestCacheTests : IClassFixture<WebApplicationFactory<Program>
 
         foreach (var user in users)
         { 
-            _httpClient.PostAsJsonAsync("/", user);
+            _httpClient.PostAsJsonAsync("/user", user);
         }
     }
 
@@ -52,14 +53,18 @@ public class ApiRequestCacheTests : IClassFixture<WebApplicationFactory<Program>
     public async void RequestCanCache()
     {
         var start = DateTime.Now.Ticks;
-        var resp1 = await _httpClient.GetAsync("/?id=1");
+        var resp1 = await _httpClient.GetAsync("/user?id=1");
+        Assert.True(resp1.StatusCode == HttpStatusCode.OK);
+
         await resp1.Content.ReadAsStringAsync();
         var end = DateTime.Now.Ticks;
 
         Assert.True(end - start > 1000000);
 
         var start1 = DateTime.Now.Ticks;
-        var resp2 = await _httpClient.GetAsync("/?id=1");
+        var resp2 = await _httpClient.GetAsync("/user?id=1");
+        Assert.True(resp2.StatusCode == HttpStatusCode.OK);
+
         await resp2.Content.ReadAsStringAsync();
         var end1 = DateTime.Now.Ticks;
 
@@ -70,10 +75,12 @@ public class ApiRequestCacheTests : IClassFixture<WebApplicationFactory<Program>
     [Fact]
     public async void CacheCanEvict()
     {
-        var resp1 = await _httpClient.GetAsync("/?id=3");
+        var resp1 = await _httpClient.GetAsync("/user?id=3");
+        Assert.True(resp1.StatusCode == HttpStatusCode.OK);
+
         var result1 = await resp1.Content.ReadAsStringAsync();
 
-        var resultForPost = await _httpClient.PutAsJsonAsync("/?id=3", new User()
+        var resultForPost = await _httpClient.PutAsJsonAsync("/user?id=3", new User()
         {
             Id = "3",
             Name = "anson33"
@@ -82,7 +89,9 @@ public class ApiRequestCacheTests : IClassFixture<WebApplicationFactory<Program>
         var stringAsync = await resultForPost.Content.ReadAsStringAsync();
         Assert.NotEqual(stringAsync, result1);
 
-        var resp2 = await _httpClient.GetAsync("/?id=3");
+        var resp2 = await _httpClient.GetAsync("/user?id=3");
+        Assert.True(resp2.StatusCode == HttpStatusCode.OK);
+
         var result2 = await resp2.Content.ReadAsStringAsync();
 
         Assert.NotEqual(result1, result2);
@@ -92,23 +101,31 @@ public class ApiRequestCacheTests : IClassFixture<WebApplicationFactory<Program>
     public async void CacheAndEvictOther()
     {
         
-        await _httpClient.PostAsJsonAsync("/", new User()
+        await _httpClient.PostAsJsonAsync("/user", new User()
         {
             Id = "5",
             Name = "anson5"
         });
         
-        var resp1 = await _httpClient.GetAsync("/users?page=1");
+        var resp1 = await _httpClient.GetAsync("/user/users?page=1");
+        Assert.True(resp1.StatusCode == HttpStatusCode.OK);
+
         var result1 = await resp1.Content.ReadAsStringAsync();
 
-        var resp2 = await _httpClient.DeleteAsync("/?id=1");
+        var resp2 = await _httpClient.DeleteAsync("/user?id=1");
+        Assert.True(resp2.StatusCode == HttpStatusCode.OK);
+
         await resp2.Content.ReadAsStringAsync();
 
-        var resp3 = await _httpClient.GetAsync("/users?page=1");
+        var resp3 = await _httpClient.GetAsync("/user/users?page=1");
+        Assert.True(resp3.StatusCode == HttpStatusCode.OK);
+
         var result3 = await resp3.Content.ReadAsStringAsync();
 
         var start = DateTime.Now.Ticks;
-        var resp4 = await _httpClient.GetAsync("/users?page=1");
+        var resp4 = await _httpClient.GetAsync("/user/users?page=1");
+        Assert.True(resp4.StatusCode == HttpStatusCode.OK);
+
         var result4 = await resp4.Content.ReadAsStringAsync();
         var end = DateTime.Now.Ticks;
 
