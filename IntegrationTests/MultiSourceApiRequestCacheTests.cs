@@ -49,11 +49,13 @@ public class MultiSourceApiRequestCacheTests : IClassFixture<WebApplicationFacto
         }
     }
 
-    [Fact]
-    public async void RequestCanCache()
+    [Theory]
+    [InlineData("/MultiSource")]
+    [InlineData("/MultiSourceInMemory")]
+    public async void RequestCanCache(string baseUrl)
     {
         var start = DateTime.Now.Ticks;
-        var resp1 = await _httpClient.GetAsync("/MultiSource?id=1");
+        var resp1 = await _httpClient.GetAsync($"{baseUrl}/?id=1");
         Assert.True(resp1.StatusCode == HttpStatusCode.OK);
         await resp1.Content.ReadAsStringAsync();
         var end = DateTime.Now.Ticks;
@@ -61,7 +63,7 @@ public class MultiSourceApiRequestCacheTests : IClassFixture<WebApplicationFacto
         Assert.True(end - start > 1000000);
 
         var start1 = DateTime.Now.Ticks;
-        var resp2 = await _httpClient.GetAsync("/MultiSource?id=1");
+        var resp2 = await _httpClient.GetAsync($"{baseUrl}?id=1");
         Assert.True(resp2.StatusCode == HttpStatusCode.OK);
         await resp2.Content.ReadAsStringAsync();
         var end1 = DateTime.Now.Ticks;
@@ -70,15 +72,17 @@ public class MultiSourceApiRequestCacheTests : IClassFixture<WebApplicationFacto
         Assert.True(result < 400000);
     }
 
-    [Fact]
-    public async void CacheCanEvict()
+    [Theory]
+    [InlineData("/MultiSource")]
+    [InlineData("/MultiSourceInMemory")]
+    public async void CacheCanEvict(string baseUrl)
     {
-        var resp1 = await _httpClient.GetAsync("/MultiSource?id=3");
+        var resp1 = await _httpClient.GetAsync($"{baseUrl}?id=3");
         Assert.True(resp1.StatusCode == HttpStatusCode.OK);
 
         var result1 = await resp1.Content.ReadAsStringAsync();
 
-        var resultForPost = await _httpClient.PutAsJsonAsync("/MultiSource?id=3", new User()
+        var resultForPost = await _httpClient.PutAsJsonAsync($"{baseUrl}?id=3", new User()
         {
             Id = "3",
             Name = "anson33"
@@ -87,7 +91,7 @@ public class MultiSourceApiRequestCacheTests : IClassFixture<WebApplicationFacto
         var stringAsync = await resultForPost.Content.ReadAsStringAsync();
         Assert.NotEqual(stringAsync, result1);
 
-        var resp2 = await _httpClient.GetAsync("/MultiSource?id=3");
+        var resp2 = await _httpClient.GetAsync($"{baseUrl}?id=3");
         Assert.True(resp2.StatusCode == HttpStatusCode.OK);
 
         var result2 = await resp2.Content.ReadAsStringAsync();
@@ -95,32 +99,34 @@ public class MultiSourceApiRequestCacheTests : IClassFixture<WebApplicationFacto
         Assert.NotEqual(result1, result2);
     }
 
-    [Fact]
-    public async void CacheAndEvictOther()
+    [Theory]
+    [InlineData("/MultiSource")]
+    [InlineData("/MultiSourceInMemory")]
+    public async void CacheAndEvictOther(string baseUrl)
     {
-        await _httpClient.PostAsJsonAsync("/MultiSource", new User()
+        await _httpClient.PostAsJsonAsync($"{baseUrl}", new User()
         {
             Id = "5",
             Name = "anson5"
         });
 
-        var resp1 = await _httpClient.GetAsync("/MultiSource/users?page=1");
+        var resp1 = await _httpClient.GetAsync($"{baseUrl}/users?page=1");
         Assert.True(resp1.StatusCode == HttpStatusCode.OK);
 
         var result1 = await resp1.Content.ReadAsStringAsync();
 
-        var resp2 = await _httpClient.DeleteAsync("/MultiSource?id=1");
+        var resp2 = await _httpClient.DeleteAsync($"{baseUrl}?id=1");
         Assert.True(resp2.StatusCode == HttpStatusCode.OK);
 
         await resp2.Content.ReadAsStringAsync();
 
-        var resp3 = await _httpClient.GetAsync("/MultiSource/users?page=1");
+        var resp3 = await _httpClient.GetAsync($"{baseUrl}/users?page=1");
         Assert.True(resp3.StatusCode == HttpStatusCode.OK);
 
         var result3 = await resp3.Content.ReadAsStringAsync();
 
         var start = DateTime.Now.Ticks;
-        var resp4 = await _httpClient.GetAsync("/MultiSource/users?page=1");
+        var resp4 = await _httpClient.GetAsync($"{baseUrl}/users?page=1");
         Assert.True(resp4.StatusCode == HttpStatusCode.OK);
 
         var result4 = await resp4.Content.ReadAsStringAsync();

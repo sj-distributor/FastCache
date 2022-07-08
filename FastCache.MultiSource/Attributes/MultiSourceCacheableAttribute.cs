@@ -5,7 +5,6 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using AspectCore.DynamicProxy;
-using FastCache.Core.Attributes;
 using FastCache.Core.Driver;
 using FastCache.Core.Entity;
 using FastCache.Core.Enums;
@@ -25,11 +24,11 @@ namespace FastCache.MultiSource.Attributes
         private static readonly ConcurrentDictionary<Type, MethodInfo>
             TypeofTaskResultMethod = new ConcurrentDictionary<Type, MethodInfo>();
         
-        private static readonly MethodInfo _taskResultMethod;
+        private static readonly MethodInfo TaskResultMethod;
 
         static MultiSourceCacheableAttribute()
         {
-            _taskResultMethod = typeof(Task).GetMethods()
+            TaskResultMethod = typeof(Task).GetMethods()
                 .First(p => p.Name == "FromResult" && p.ContainsGenericParameters);
         }
 
@@ -101,7 +100,7 @@ namespace FastCache.MultiSource.Attributes
                         : context.ServiceMethod.ReturnType;
 
                     context.ReturnValue =  context.IsAsync() ? TypeofTaskResultMethod.GetOrAdd(returnTypeBefore,
-                            t => _taskResultMethod.MakeGenericMethod(returnTypeBefore))
+                            t => TaskResultMethod.MakeGenericMethod(returnTypeBefore))
                         .Invoke(null, new [] { cacheValue.Value }) : cacheValue.Value;
                         
                     return;
