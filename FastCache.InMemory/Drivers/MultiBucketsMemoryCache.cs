@@ -11,7 +11,7 @@ using FastCache.InMemory.Enum;
 
 namespace FastCache.InMemory.Drivers
 {
-    public class MultiBucketsMemoryCache : ICacheClient
+    public class MultiBucketsMemoryCache : IMemoryCache
     {
         private readonly uint _buckets;
         private readonly MaxMemoryPolicy _maxMemoryPolicy;

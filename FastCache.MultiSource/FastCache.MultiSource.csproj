@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>netstandard2.1</TargetFramework>
+        <PackageId>FastCache.MultiSource</PackageId>
+        <Authors>Anson.G</Authors>
+        <Company>Wiltechs</Company>
+        <RootNamespace>FastCache.MultiSource</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\FastCache.Core\FastCache.Core.csproj" />
+      <ProjectReference Include="..\FastCache.InMemory\FastCache.InMemory.csproj" />
+      <ProjectReference Include="..\FastCache.Redis\FastCache.Redis.csproj" />
+    </ItemGroup>
+
+</Project>

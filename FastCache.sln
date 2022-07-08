@@ -14,6 +14,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FastCache.InMemory", "FastC
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FastCache.Redis", "FastCache.Redis\FastCache.Redis.csproj", "{C703ED69-BFAA-4279-9E79-0BA393C4E1E4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FastCache.MultiSource", "FastCache.MultiSource\FastCache.MultiSource.csproj", "{8DEB60E1-08A6-4891-A3A4-90D59154875C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -44,6 +46,10 @@ Global
 		{C703ED69-BFAA-4279-9E79-0BA393C4E1E4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C703ED69-BFAA-4279-9E79-0BA393C4E1E4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C703ED69-BFAA-4279-9E79-0BA393C4E1E4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8DEB60E1-08A6-4891-A3A4-90D59154875C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8DEB60E1-08A6-4891-A3A4-90D59154875C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8DEB60E1-08A6-4891-A3A4-90D59154875C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8DEB60E1-08A6-4891-A3A4-90D59154875C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{C01FF6DE-E937-4FB2-A403-149D6861D6EA} = {D2E7881C-5003-4E0A-AAB5-BF41250B2D9A}

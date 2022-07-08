@@ -3,6 +3,8 @@ using AspectCore.Extensions.DependencyInjection;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using FastCache.InMemory.Setup;
+using FastCache.MultiSource.Setup;
+using FastCache.Redis.Setup;
 using TestApi.DB;
 using TestApi.Service;
 
@@ -16,7 +18,12 @@ builder.Host.UseServiceProviderFactory(new DynamicProxyServiceProviderFactory())
 //     build.RegisterDynamicProxy();
 // });
 
-// builder.Services.AddMvc().AddControllersAsServices();
+builder.Services.AddMvc().AddControllersAsServices();
+
+builder.Services.AddMultiSourceCache(
+    "server=localhost:6379;timeout=5000;MaxMessageSize=1024000;Expire=3600",
+    true
+);
 
 // builder.Services.AddMultiBucketsInMemoryCache();
 builder.Services.AddInMemoryCache();
@@ -52,4 +59,6 @@ app.MapControllers();
 
 app.Run();
 
-public partial class Program { }
+public partial class Program
+{
+}

@@ -5,7 +5,7 @@ using TestApi.Service;
 namespace TestApi.Controllers;
 
 [ApiController]
-[Route("/user", Name = "/user")]
+[Route("/[controller]")]
 public class UserController : ControllerBase
 {
     private readonly IUserService _userService;
@@ -15,31 +15,32 @@ public class UserController : ControllerBase
         _userService = userService;
     }
 
-    [Route("/"), HttpGet]
+    [HttpGet]
     public virtual async Task<User> Get(string id)
     {
-        return await _userService.Single(id);
+        var user = await _userService.Single(id);
+        return user;
     }
 
-    [Route("/"), HttpPost]
+    [HttpPost]
     public User Add(User user)
     {
         return _userService.Add(user);
     }
 
-    [Route("/"), HttpPut]
+    [HttpPut]
     public async Task<User> Update(User user)
     {
         return await _userService.Update(user);
     }
 
-    [Route("/"), HttpDelete]
+    [HttpDelete]
     public bool Delete(string id)
     {
         return _userService.Delete(id);
     }
 
-    [Route("/users"), HttpGet]
+    [HttpGet("users")]
     public IEnumerable<User> Users(string page)
     {
         return _userService.List(page);

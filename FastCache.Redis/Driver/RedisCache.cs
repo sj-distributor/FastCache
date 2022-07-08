@@ -7,7 +7,7 @@ using Newtonsoft.Json;
 
 namespace FastCache.Redis.Driver
 {
-    public class RedisCache : ICacheClient
+    public class RedisCache : IRedisCache
     {
         private bool _canGetRedisClient = false;
 
@@ -49,22 +49,14 @@ namespace FastCache.Redis.Driver
 
         public Task<CacheItem> Get(string key)
         {
-            var result = _redisClient.Get<CacheItem>(key);
+            var cacheValue = _redisClient.Get<CacheItem>(key);
+            if (cacheValue?.AssemblyName == null || cacheValue?.Type == null) return Task.FromResult(new CacheItem());
+            
+            var assembly = Assembly.Load(cacheValue.AssemblyName);
+            var valueType = assembly.GetType(cacheValue.Type, true, true);
+            cacheValue.Value = JsonConvert.DeserializeObject(cacheValue.Value as string, valueType);
+            return Task.FromResult(cacheValue);
 
-            if (result?.Value != null)
-            {
-                if (result.AssemblyName == null) return Task.FromResult(new CacheItem());
-                var assembly = Assembly.Load(result.AssemblyName);
-                if (result.Type == null) return Task.FromResult(new CacheItem());
-                var valueType = assembly.GetType(result.Type, true, true);
-                result.Value = JsonConvert.DeserializeObject(result.Value as string, valueType);
-
-                return Task.FromResult(result);
-            }
-            else
-            {
-                return Task.FromResult(new CacheItem());
-            }
         }
 
         public Task Delete(string key)

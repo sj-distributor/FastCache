@@ -14,6 +14,7 @@ Choose caching provider that you need and install it via Nuget.
 ```
 Install-Package FastCache.InMemory
 Install-Package FastCache.Redis
+Install-Package FastCache.MultiSource
 ```
 
 ## 🚀 Quick start
@@ -170,6 +171,26 @@ STEP:
 thus triggering queries to the database will be significantly reduced 🚀 
 
 **********************************************
+```
+
+## 🍺 Multi Source ( Redis and InMemory )
+```C#
+// Program.cs
+builder.Services.AddMultiSourceCache(
+    "server=localhost:6379;timeout=5000;MaxMessageSize=1024000;Expire=3600",  // redis connectionString
+    true                                                                      // can get redis client
+);
+
+
+// UserController.cs
+// Target.Redis Target.InMemory
+[HttpGet]
+[MultiSourceCacheable("MultiSource-single", "{id}", Target.Redis, 60)]
+public virtual async Task<User> Get(string id)
+{
+    return await _userService.Single(id).Result;
+}
+
 ```
 
 ## 🎃 Parameter Description
