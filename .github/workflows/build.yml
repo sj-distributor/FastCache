@@ -27,9 +27,9 @@ jobs:
           fetch-depth: 0
           
       - name: Install GitVersion
-        uses: gittools/actions/gitversion/setup@v0.9.7
+        uses: gittools/actions/gitversion/setup@v0.9.15
         with:
-          versionSpec: '6.0.14'
+          versionSpec: '5.12.0'
           includePrerelease: true    
 
       - name: Determine Version
