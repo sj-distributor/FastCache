@@ -14,7 +14,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="AspectCore.Core" Version="2.2.0" />
+        <PackageReference Include="AspectCore.Core" Version="2.3.0" />
         <PackageReference Include="NewLife.Redis" Version="4.1.2022.501" />
     </ItemGroup>
 

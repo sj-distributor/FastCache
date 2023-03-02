@@ -1,10 +1,6 @@
-using AspectCore.Extensions.Autofac;
 using AspectCore.Extensions.DependencyInjection;
-using Autofac;
-using Autofac.Extensions.DependencyInjection;
 using FastCache.InMemory.Setup;
 using FastCache.MultiSource.Setup;
-using FastCache.Redis.Setup;
 using TestApi.DB;
 using TestApi.Service;
 

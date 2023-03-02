@@ -9,7 +9,6 @@ using FastCache.Core.Driver;
 using FastCache.Core.Entity;
 using FastCache.Core.Utils;
 using Microsoft.Extensions.DependencyInjection;
-using Newtonsoft.Json;
 
 namespace FastCache.Core.Attributes
 {
