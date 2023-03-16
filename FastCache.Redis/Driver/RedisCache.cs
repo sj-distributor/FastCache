@@ -74,7 +74,10 @@ namespace FastCache.Redis.Driver
                 }
 
                 var list = _redisClient.Keys.Where(x => x.Contains(newKey)).ToArray();
-                _redisClient.Remove(list);
+                if (list.Length > 0)
+                {
+                    _redisClient.Remove(list);
+                }
             }
             else
             {
