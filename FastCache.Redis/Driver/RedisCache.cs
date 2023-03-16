@@ -61,23 +61,24 @@ namespace FastCache.Redis.Driver
 
         public Task Delete(string key)
         {
-            if (key.Contains('*'))
+            var newKey = key;
+            if (newKey.Contains('*'))
             {
-                if (key.First() == '*')
+                if (newKey.First() == '*')
                 {
-                    key = key.Substring(1, key.Length - 1);
+                    newKey = newKey.Substring(1, key.Length - 1);
                 }
-                else if (key.Last() == '*')
+                else if (newKey.Last() == '*')
                 {
-                    key = key[..^1];
+                    newKey = newKey[..^1];
                 }
 
-                var list = _redisClient.Keys.Where(x => x.Contains(key)).ToArray();
+                var list = _redisClient.Keys.Where(x => x.Contains(newKey)).ToArray();
                 _redisClient.Remove(list);
             }
             else
             {
-                _redisClient.Remove(key);
+                _redisClient.Remove(newKey);
             }
 
             return Task.CompletedTask;

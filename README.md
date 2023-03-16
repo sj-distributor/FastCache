@@ -247,7 +247,3 @@ public static void AddMultiBucketsInMemoryCache(
    }
 }
 ```
-
-## Other works about caching 
-[NetCoreCache( MemoryCache )](https://github.com/sj-distributor/core-cache) 👈🏻👈🏻
-[NetCoreCacheRedis( RedisCache )](https://github.com/sj-distributor/core-cache.Extensions.Redis) 👈🏻👈🏻
