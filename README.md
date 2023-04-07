@@ -26,7 +26,7 @@ builder.Host.UseServiceProviderFactory(new DynamicProxyServiceProviderFactory())
 builder.Services.AddInMemoryCache(); // InMemory
 
 // builder.Services.AddMultiBucketsInMemoryCache(); // Big cache
-// builder.Services.AddRedisCache("server=localhost:6379;timeout=5000;MaxMessageSize=1024000;Expire=3600", canGetRedisClient: true) 
+// builder.Services.AddRedisCache("server=localhost:6379;timeout=5000;MaxMessageSize=1024000;Expire=3600", canGetRedisClient: true) // "Expire=3600" is redis global timeout
 // canGetRedisClient = true => get redisClient instance
 // var redisClient = serviceProvider.GetService<ICacheClient>();
 
@@ -73,7 +73,7 @@ public class UserController : ControllerBase
     }
 }
 **********************************
-***** Method must be virtual *****
+***** Method must be "virtual" *****
 **********************************
 ```
 
@@ -127,6 +127,7 @@ public class UserService
     }
     
     [Evictable(new[] { "user-single", "other cache name" }, "{id}")]
+    // [Evictable(new[] { "user" }, "{id}*")] // when {id} is "123", it will match keys starting with user:123 and perform a fuzzy deletion.
     public virtual void Delete(string id)
     {
         // delete logic...
@@ -173,7 +174,7 @@ thus triggering queries to the database will be significantly reduced 🚀
 **********************************************
 ```
 
-## 🍺 Multi Source ( Redis and InMemory )
+## 🍺 Multi Source ( Currently supports Redis and inMemory )
 ```C#
 // Program.cs
 builder.Services.AddMultiSourceCache(
@@ -185,12 +186,23 @@ builder.Services.AddMultiSourceCache(
 // UserController.cs
 // Target.Redis Target.InMemory
 [HttpGet]
-[MultiSourceCacheable("MultiSource-single", "{id}", Target.Redis, 60)]
-public virtual async Task<User> Get(string id)
+[MultiSourceCacheable("MultiSource-single", "{id}", Target.Redis, 60)] // Target.Redis
+public virtual async Task<User> Get1(string id)
 {
     return await _userService.Single(id).Result;
 }
 
+[HttpGet]
+[MultiSourceCacheable("MultiSource-single", "{id}", Target.InMemory, 60)] // Target.InMemory
+public virtual async Task<User> Get2(string id)
+{
+    return await _userService.Single(id).Result;
+}
+
+
+**********************************************
+According to business needs, flexibly store the cache in redis or memory
+**********************************************
 ```
 
 ## 🎃 Parameter Description

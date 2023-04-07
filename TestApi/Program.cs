@@ -17,13 +17,13 @@ builder.Host.UseServiceProviderFactory(new DynamicProxyServiceProviderFactory())
 builder.Services.AddMvc().AddControllersAsServices();
 
 builder.Services.AddMultiSourceCache(
-    "server=localhost:6379;timeout=5000;MaxMessageSize=1024000;Expire=3600",
+    "server=localhost:6379;timeout=5000;MaxMessageSize=1024000;Expire=3600", // "Expire=3600" redis global timeout 
     true
 );
 
 // builder.Services.AddMultiBucketsInMemoryCache();
 builder.Services.AddInMemoryCache();
-// builder.Services.AddRedisCache("server=localhost:6379;timeout=5000;MaxMessageSize=1024000;Expire=3600");
+// builder.Services.AddRedisCache("server=localhost:6379;timeout=5000;MaxMessageSize=1024000;Expire=3600"); // "Expire=3600" redis global timeout 
 
 builder.Services.RegisterServices();
 
