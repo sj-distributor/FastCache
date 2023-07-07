@@ -11,7 +11,7 @@ namespace FastCache.Redis.Driver
     {
         private bool _canGetRedisClient = false;
 
-        private readonly NewLife.Caching.Redis _redisClient;
+        private readonly NewLife.Caching.FullRedis _redisClient;
 
         public NewLife.Caching.Redis? GetRedisClient()
         {
@@ -21,7 +21,7 @@ namespace FastCache.Redis.Driver
         public RedisCache(string connectionString, bool canGetRedisClient = false)
         {
             _canGetRedisClient = canGetRedisClient;
-            _redisClient = new NewLife.Caching.Redis();
+            _redisClient = new NewLife.Caching.FullRedis();
             _redisClient.Init(connectionString);
         }
 
@@ -61,27 +61,26 @@ namespace FastCache.Redis.Driver
 
         public Task Delete(string key)
         {
-            var newKey = key;
-            if (newKey.Contains('*'))
+            if (key.Contains('*'))
             {
-                if (newKey.First() == '*')
+                string[] list = { };
+                if (key.First() == '*' || key.Last() == '*')
                 {
-                    newKey = newKey.Substring(1, key.Length - 1);
+                    list = _redisClient.Search(key, 1000).ToArray();
                 }
-                else if (newKey.Last() == '*')
+                else
                 {
-                    newKey = newKey[..^1];
+                    _redisClient.Remove(key);
                 }
 
-                var list = _redisClient.Keys.Where(x => x.Contains(newKey)).ToArray();
-                if (list.Length > 0)
+                if (list?.Length > 0)
                 {
                     _redisClient.Remove(list);
                 }
             }
             else
             {
-                _redisClient.Remove(newKey);
+                _redisClient.Remove(key);
             }
 
             return Task.CompletedTask;
