@@ -10,9 +10,9 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="AspectCore.Core" Version="2.3.0" />
-        <PackageReference Include="AspectCore.Extensions.Autofac" Version="2.3.0" />
-        <PackageReference Include="AspectCore.Extensions.DependencyInjection" Version="2.3.0" />
+        <PackageReference Include="AspectCore.Core" Version="2.4.0" />
+        <PackageReference Include="AspectCore.Extensions.Autofac" Version="2.4.0" />
+        <PackageReference Include="AspectCore.Extensions.DependencyInjection" Version="2.4.0" />
         <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="6.0.0" />
         <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="6.0.0" />
         <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
