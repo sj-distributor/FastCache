@@ -1,6 +1,6 @@
-#nullable enable
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Configuration;
@@ -22,11 +22,26 @@ namespace FastCache.Core.Utils
 
             foreach (Match match in matches)
             {
-                originKey = originKey.Replace(match.Value, values[match.Value.Replace(@"{", "").Replace(@"}", "")]);
+                var valueName = match.Value.Replace(@"{", "").Replace(@"}", "");
+                var sections = values.GetSection(valueName).GetChildren();
+
+                if (sections.Any())
+                {
+                    var valuesList = new List<string>();
+                    foreach (var keyValuePair in sections)
+                    {
+                        valuesList.Add(keyValuePair.Value);
+                    }
+
+                    originKey = originKey.Replace(match.Value, string.Join(",", valuesList));
+                }
+                else
+                {
+                    originKey = originKey.Replace(match.Value, values[valueName]);
+                }
             }
 
             return $"{name}:{originKey}";
         }
-    } 
+    }
 }
-
