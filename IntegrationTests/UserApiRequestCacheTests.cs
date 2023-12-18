@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
+using FastCache.Core.Utils;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using TestApi.DB;
@@ -133,5 +134,56 @@ public class UserApiRequestCacheTests : IClassFixture<WebApplicationFactory<Prog
         Assert.Equal(result3, result4);
         var timeResult = end - start;
         Assert.True(timeResult < 500000);
+    }
+
+    [Fact]
+    public void GetCacheKey()
+    {
+        const string prifix = "single";
+        const string defaultKey = $"{prifix}:";
+        var companyThirdPartyIds = new Company()
+        {
+            Id = "3",
+            Name = "anson33",
+            ThirdPartyIds = new List<long>() { 123, 456, 789 }
+        };
+        var arrayKey =
+            KeyGenerateHelper.GetKey(prifix, "{company:thirdPartyIds}",
+                new Dictionary<string, object>() { { "company", companyThirdPartyIds } });
+        
+        Assert.Equal(arrayKey, $"{prifix}:{string.Join(",", companyThirdPartyIds.ThirdPartyIds)}");
+
+        var companyMenus = new Company()
+        {
+            Id = "c1",
+            Name = "company 1",
+            Menus = new List<CompanyMenu>()
+            {
+                new CompanyMenu() { openTime = DateTimeOffset.Now, endTime = DateTimeOffset.Now.AddHours(1) }
+            }
+        };
+        
+        var companyMenusKey =
+            KeyGenerateHelper.GetKey(prifix, "{company:menus}",
+                new Dictionary<string, object>() { { "company", companyMenus } });
+        
+        Assert.Equal(companyMenusKey, defaultKey);
+
+        var companyMerchants = new Company()
+        {
+            Id = "c1",
+            Name = "company 1",
+            Merchants = new List<CompanyMerchant>()
+            {
+                new CompanyMerchant() { MerchantIds = new List<string>() { "m11", "m12" } },
+                new CompanyMerchant() { MerchantIds = new List<string>(){ "m21", "m22" }}
+            }
+        };
+
+        var companyMerchantsKey =
+            KeyGenerateHelper.GetKey(prifix, "{company:erchants}",
+                new Dictionary<string, object>() { { "company", companyMerchants } });
+
+        Assert.Equal(companyMerchantsKey, defaultKey);
     }
 }

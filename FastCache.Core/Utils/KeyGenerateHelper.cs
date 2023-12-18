@@ -23,8 +23,8 @@ namespace FastCache.Core.Utils
             foreach (Match match in matches)
             {
                 var valueName = match.Value.Replace(@"{", "").Replace(@"}", "");
-                var sections = values.GetSection(valueName).GetChildren();
-
+                var sections = values.GetSection(valueName).GetChildren().Where(x => !string.IsNullOrEmpty(x.Value));
+                
                 if (sections.Any())
                 {
                     var valuesList = new List<string>();
