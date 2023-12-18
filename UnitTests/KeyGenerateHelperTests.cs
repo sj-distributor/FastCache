@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using FastCache.Core.Utils;
 using TestApi.Entity;
 using Xunit;
@@ -25,13 +26,14 @@ public class KeyGenerateHelperTests
         
         Assert.Equal(arrayKey, $"{prifix}:{string.Join(",", companyThirdPartyIds.ThirdPartyIds)}");
 
+        var companyMenuOpenTime = DateTimeOffset.Now.ToUniversalTime();
         var companyMenus = new Company()
         {
             Id = "c1",
             Name = "company 1",
             Menus = new List<CompanyMenu>()
             {
-                new CompanyMenu() { openTime = DateTimeOffset.Now, endTime = DateTimeOffset.Now.AddHours(1) }
+                new CompanyMenu() { openTime = companyMenuOpenTime, endTime = DateTimeOffset.Now.AddHours(1) }
             }
         };
         
@@ -40,6 +42,11 @@ public class KeyGenerateHelperTests
                 new Dictionary<string, object>() { { "company", companyMenus } });
         
         Assert.Equal(companyMenusKey, defaultKey);
+        
+        var companyMenusFirstKey =
+            KeyGenerateHelper.GetKey(prifix, "{company:menus:0:openTime}",
+                new Dictionary<string, object>() { { "company", companyMenus } });
+        Assert.Equal(companyMenusFirstKey, $"{prifix}:{companyMenuOpenTime:yyyy-MM-ddTHH:mm:ss.ffffffzzz}");
 
         var companyMerchants = new Company()
         {
@@ -57,5 +64,11 @@ public class KeyGenerateHelperTests
                 new Dictionary<string, object>() { { "company", companyMerchants } });
 
         Assert.Equal(companyMerchantsKey, defaultKey);
+        
+        var companyMerchantsFirstKey =
+            KeyGenerateHelper.GetKey(prifix, "{company:merchants:0:merchantIds:0}",
+                new Dictionary<string, object>() { { "company", companyMerchants } });
+
+        Assert.Equal(companyMerchantsFirstKey, $"{prifix}:{companyMerchants.Merchants.First().MerchantIds.First()}");
     }
 }
