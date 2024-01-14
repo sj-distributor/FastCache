@@ -105,7 +105,7 @@ namespace FastCache.Core.Attributes
                 value = context.ReturnValue;
             }
             
-            var returnType = value.GetType();
+            var returnType = value?.GetType();
 
             await cacheClient.Set(key, new CacheItem
             {
