@@ -100,7 +100,7 @@ public class MemoryCacheTests
     public async void TestMemoryCacheCanDeleteByPatternWithPrefix(string prefix, string key, string value,
         string result)
     {
-        var fullKey = $"{prefix}{key}";
+        var fullKey = $"{prefix}:{key}";
         await _memoryCache.Set(fullKey, new CacheItem()
         {
             Value = value,
