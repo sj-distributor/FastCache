@@ -26,7 +26,7 @@ public class KeyGenerateHelperTests
         
         Assert.Equal(arrayKey, $"{prefix}:{string.Join(",", companyThirdPartyIds.ThirdPartyIds)}");
 
-        var companyMenuOpenTime = DateTimeOffset.Now.ToUniversalTime();
+        var companyMenuOpenTime = DateTimeOffset.UtcNow;
         var companyMenus = new Company()
         {
             Id = "c1",
@@ -46,7 +46,9 @@ public class KeyGenerateHelperTests
         var companyMenusFirstKey =
             KeyGenerateHelper.GetKey(prefix, "{company:menus:0:openTime}",
                 new Dictionary<string, object>() { { "company", companyMenus } });
-        Assert.Equal(companyMenusFirstKey, $"{prefix}:{companyMenuOpenTime:yyyy-MM-ddTHH:mm:ss.ffffffzzz}");
+        
+        var milliseconds = companyMenuOpenTime.ToString("ffffff").TrimEnd('0');
+        Assert.Equal(companyMenusFirstKey, $"{prefix}:{companyMenuOpenTime:yyyy-MM-ddTHH:mm:ss}.{milliseconds}+00:00");
 
         var companyMerchants = new Company()
         {
