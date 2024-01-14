@@ -48,9 +48,9 @@ namespace FastCache.InMemory.Drivers
                 Delete(key);
                 return Task.FromResult(new CacheItem());
             }
-            
+
             ++cacheItem.Hits;
-            
+
             return Task.FromResult(cacheItem);
         }
 
@@ -58,16 +58,24 @@ namespace FastCache.InMemory.Drivers
         {
             if (key.Contains('*'))
             {
-                if (key.First() == '*')
+                if (key.Length > 0 && key.First() == '*')
                 {
-                    key = key.Substring(1, key.Length);
+                    key = key[1..];
                 }
-                else if (key.Last() == '*')
+
+                if (key.Length > 0 && key.Last() == '*')
                 {
                     key = key[..^1];
                 }
 
-                _dist.Keys.Where(x => x.Contains(key)).ToList().ForEach(k => _dist.TryRemove(k, out var _));
+                if (string.IsNullOrEmpty(key))
+                {
+                    _dist.Keys.ToList().ForEach(k => _dist.TryRemove(k, out var _));
+                }
+                else
+                {
+                    _dist.Keys.Where(x => x.Contains(key)).ToList().ForEach(k => _dist.TryRemove(k, out var _));
+                }
             }
             else
             {
@@ -85,7 +93,6 @@ namespace FastCache.InMemory.Drivers
 
             if (_maxMemoryPolicy == MaxMemoryPolicy.RANDOM)
             {
-             
                 foreach (var key in _dist.Keys.TakeLast(removeRange))
                 {
                     _dist.Remove(key, out var _);

@@ -17,21 +17,19 @@ namespace FastCache.Core.Utils
                     new MemoryStream(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(parameters))))
                 .Build();
 
-            var reg = new Regex("\\{([^\\}]*)\\}");
+            var reg = new Regex(@"\{([^\}]*)\}");
             var matches = reg.Matches(originKey);
 
             foreach (Match match in matches)
             {
                 var valueName = match.Value.Replace(@"{", "").Replace(@"}", "");
-                var sections = values.GetSection(valueName).GetChildren().Where(x => !string.IsNullOrEmpty(x.Value));
-                
+                var sections = values.GetSection(valueName).GetChildren()
+                    .Where(x => !string.IsNullOrEmpty(x.Value))
+                    .ToList();
+
                 if (sections.Any())
                 {
-                    var valuesList = new List<string>();
-                    foreach (var keyValuePair in sections)
-                    {
-                        valuesList.Add(keyValuePair.Value);
-                    }
+                    var valuesList = sections.Select(keyValuePair => keyValuePair.Value).ToList();
 
                     originKey = originKey.Replace(match.Value, string.Join(",", valuesList));
                 }

@@ -12,8 +12,8 @@ public class KeyGenerateHelperTests
     [Fact]
     public void GetCacheKey()
     {
-        const string prifix = "single";
-        const string defaultKey = $"{prifix}:";
+        const string prefix = "single";
+        const string defaultKey = $"{prefix}:";
         var companyThirdPartyIds = new Company()
         {
             Id = "3",
@@ -21,10 +21,10 @@ public class KeyGenerateHelperTests
             ThirdPartyIds = new List<long>() { 123, 456, 789 }
         };
         var arrayKey =
-            KeyGenerateHelper.GetKey(prifix, "{company:thirdPartyIds}",
+            KeyGenerateHelper.GetKey(prefix, "{company:thirdPartyIds}",
                 new Dictionary<string, object>() { { "company", companyThirdPartyIds } });
         
-        Assert.Equal(arrayKey, $"{prifix}:{string.Join(",", companyThirdPartyIds.ThirdPartyIds)}");
+        Assert.Equal(arrayKey, $"{prefix}:{string.Join(",", companyThirdPartyIds.ThirdPartyIds)}");
 
         var companyMenuOpenTime = DateTimeOffset.Now.ToUniversalTime();
         var companyMenus = new Company()
@@ -38,15 +38,15 @@ public class KeyGenerateHelperTests
         };
         
         var companyMenusKey =
-            KeyGenerateHelper.GetKey(prifix, "{company:menus}",
+            KeyGenerateHelper.GetKey(prefix, "{company:menus}",
                 new Dictionary<string, object>() { { "company", companyMenus } });
         
         Assert.Equal(companyMenusKey, defaultKey);
         
         var companyMenusFirstKey =
-            KeyGenerateHelper.GetKey(prifix, "{company:menus:0:openTime}",
+            KeyGenerateHelper.GetKey(prefix, "{company:menus:0:openTime}",
                 new Dictionary<string, object>() { { "company", companyMenus } });
-        Assert.Equal(companyMenusFirstKey, $"{prifix}:{companyMenuOpenTime:yyyy-MM-ddTHH:mm:ss.ffffffzzz}");
+        Assert.Equal(companyMenusFirstKey, $"{prefix}:{companyMenuOpenTime:yyyy-MM-ddTHH:mm:ss.ffffffzzz}");
 
         var companyMerchants = new Company()
         {
@@ -60,15 +60,15 @@ public class KeyGenerateHelperTests
         };
 
         var companyMerchantsKey =
-            KeyGenerateHelper.GetKey(prifix, "{company:merchants}",
+            KeyGenerateHelper.GetKey(prefix, "{company:merchants}",
                 new Dictionary<string, object>() { { "company", companyMerchants } });
 
         Assert.Equal(companyMerchantsKey, defaultKey);
         
         var companyMerchantsFirstKey =
-            KeyGenerateHelper.GetKey(prifix, "{company:merchants:0:merchantIds:0}",
+            KeyGenerateHelper.GetKey(prefix, "{company:merchants:0:merchantIds:0}",
                 new Dictionary<string, object>() { { "company", companyMerchants } });
 
-        Assert.Equal(companyMerchantsFirstKey, $"{prifix}:{companyMerchants.Merchants.First().MerchantIds.First()}");
+        Assert.Equal(companyMerchantsFirstKey, $"{prefix}:{companyMerchants.Merchants.First().MerchantIds.First()}");
     }
 }

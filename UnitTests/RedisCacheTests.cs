@@ -8,12 +8,8 @@ namespace UnitTests;
 
 public class RedisCacheTests
 {
-    private RedisCache _redisClient;
-
-    public RedisCacheTests()
-    {
-        _redisClient = new RedisCache("server=localhost:6379;timeout=5000;MaxMessageSize=1024000;Expire=3600", true);
-    }
+    private readonly RedisCache _redisClient =
+        new("server=localhost:6379;timeout=5000;MaxMessageSize=1024000;Expire=3600", true);
 
     [Theory]
     [InlineData("anson", "18", "18")]
@@ -79,7 +75,7 @@ public class RedisCacheTests
         var s = await _redisClient.Get(key);
         Assert.Equal(s.Value, result);
     }
-    
+
     [Theory]
     [InlineData("1111Joe", "18", null)]
     [InlineData("2222Joe", "19", null)]
@@ -92,6 +88,42 @@ public class RedisCacheTests
             Type = value.GetType().FullName
         });
         await _redisClient.Delete("*Joe");
+        var s = await _redisClient.Get(key);
+        Assert.Equal(s.Value, result);
+    }
+
+    [Theory]
+    [InlineData("1111Joe", "*Joe*", "18", null)]
+    [InlineData("2222Joe22222", "*Joe*", "19", null)]
+    [InlineData("3333Joe22222", "*Joe*", "20", null)]
+    public async void TestRedisCacheCanDeleteByFirstAndLastPattern(string key, string deleteKey, string value,
+        string result)
+    {
+        await _redisClient.Set(key, new CacheItem()
+        {
+            Value = value,
+            AssemblyName = value.GetType().Assembly.GetName().Name,
+            Type = value.GetType().FullName
+        });
+        await _redisClient.Delete(deleteKey);
+        var s = await _redisClient.Get(key);
+        Assert.Equal(s.Value, result);
+    }
+    
+    [Theory]
+    [InlineData("1111Joe", "*", "18", null)]
+    [InlineData("2222Joe22222", "*", "19", null)]
+    [InlineData("3333Joe22222", "*", "20", null)]
+    public async void TestRedisCacheCanDeleteByGeneralMatchPattern(string key, string deleteKey, string value,
+        string result)
+    {
+        await _redisClient.Set(key, new CacheItem()
+        {
+            Value = value,
+            AssemblyName = value.GetType().Assembly.GetName().Name,
+            Type = value.GetType().FullName
+        });
+        await _redisClient.Delete(deleteKey);
         var s = await _redisClient.Get(key);
         Assert.Equal(s.Value, result);
     }

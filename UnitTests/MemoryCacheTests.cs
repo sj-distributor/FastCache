@@ -107,4 +107,36 @@ public class MemoryCacheTests
         var cacheItem = await _memoryCache.Get(key);
         Assert.Equal(cacheItem.Value, result);
     }
+
+    [Theory]
+    [InlineData("ansonExpire333", "*anson", "18", null)]
+    [InlineData("ansonExpire444", "anson*", "19", null)]
+    [InlineData("ansonExpire555", "*", "20", null)]
+    public async void TestMemoryCacheCanDeleteAsterisk(string key, string deleteKey, string value, string result)
+    {
+        await _memoryCache.Set(key, new CacheItem()
+        {
+            Value = value,
+            Expire = DateTime.Now.AddSeconds(20).Ticks
+        });
+        await _memoryCache.Delete(deleteKey);
+        var s = await _memoryCache.Get(key);
+        Assert.Equal(s.Value, result);
+    }
+    
+    [Theory]
+    [InlineData("ansonExpire333", "*", "18", null)]
+    [InlineData("ansonExpire444", "*", "19", null)]
+    [InlineData("ansonExpire555", "*", "20", null)]
+    public async void TestMemoryCacheCanDeleteByGeneralMatchAsterisk(string key, string deleteKey, string value, string result)
+    {
+        await _memoryCache.Set(key, new CacheItem()
+        {
+            Value = value,
+            Expire = DateTime.Now.AddSeconds(20).Ticks
+        });
+        await _memoryCache.Delete(deleteKey);
+        var s = await _memoryCache.Get(key);
+        Assert.Equal(s.Value, result);
+    }
 }
