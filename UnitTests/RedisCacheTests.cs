@@ -61,9 +61,9 @@ public class RedisCacheTests
     }
 
     [Theory]
-    [InlineData("anson1111", "18", null)]
-    [InlineData("anson2222", "19", null)]
-    public async void TestRedisCacheCanDeleteByLastPattern(string key, string value, string result)
+    [InlineData("", "anson1111", "18", null)]
+    [InlineData("", "anson2222", "19", null)]
+    public async void TestRedisCacheCanDeleteByLastPattern(string prefix, string key, string value, string result)
     {
         await _redisClient.Set(key, new CacheItem()
         {
@@ -71,32 +71,15 @@ public class RedisCacheTests
             AssemblyName = value.GetType().Assembly.GetName().Name,
             Type = value.GetType().FullName
         });
-        await _redisClient.Delete("anson*");
+        await _redisClient.Delete("anson*", prefix);
         var s = await _redisClient.Get(key);
         Assert.Equal(s.Value, result);
     }
 
     [Theory]
-    [InlineData("1111Joe", "18", null)]
-    [InlineData("2222Joe", "19", null)]
-    public async void TestRedisCacheCanDeleteByFirstPattern(string key, string value, string result)
-    {
-        await _redisClient.Set(key, new CacheItem()
-        {
-            Value = value,
-            AssemblyName = value.GetType().Assembly.GetName().Name,
-            Type = value.GetType().FullName
-        });
-        await _redisClient.Delete("*Joe");
-        var s = await _redisClient.Get(key);
-        Assert.Equal(s.Value, result);
-    }
-
-    [Theory]
-    [InlineData("1111Joe", "*Joe*", "18", null)]
-    [InlineData("2222Joe22222", "*Joe*", "19", null)]
-    [InlineData("3333Joe22222", "*Joe*", "20", null)]
-    public async void TestRedisCacheCanDeleteByFirstAndLastPattern(string key, string deleteKey, string value,
+    [InlineData("", "anson1111", "18", null)]
+    [InlineData("", "anson2222", "19", null)]
+    public async void TestRedisCacheCanDeleteByLastPatternByFullKey(string prefix, string key, string value,
         string result)
     {
         await _redisClient.Set(key, new CacheItem()
@@ -105,17 +88,51 @@ public class RedisCacheTests
             AssemblyName = value.GetType().Assembly.GetName().Name,
             Type = value.GetType().FullName
         });
-        await _redisClient.Delete(deleteKey);
+        await _redisClient.Delete(key);
         var s = await _redisClient.Get(key);
         Assert.Equal(s.Value, result);
     }
-    
+
     [Theory]
-    [InlineData("1111Joe", "*", "18", null)]
-    [InlineData("2222Joe22222", "*", "19", null)]
-    [InlineData("3333Joe22222", "*", "20", null)]
-    public async void TestRedisCacheCanDeleteByGeneralMatchPattern(string key, string deleteKey, string value,
+    [InlineData("anson", "anson1111", "18", null)]
+    [InlineData("anson", "anson2222", "19", null)]
+    public async void TestRedisCacheCanDeleteByLastPatternWithPrefix(string prefix, string key, string value,
         string result)
+    {
+        var fullKey = $"{prefix}:{key}";
+        await _redisClient.Set(fullKey, new CacheItem()
+        {
+            Value = value,
+            AssemblyName = value.GetType().Assembly.GetName().Name,
+            Type = value.GetType().FullName
+        });
+        await _redisClient.Delete("anson*", prefix);
+        var s = await _redisClient.Get(fullKey);
+        Assert.Equal(s.Value, result);
+    }
+
+    [Theory]
+    [InlineData("anson", "anson1111", "18", null)]
+    [InlineData("anson", "anson2222", "19", null)]
+    public async void TestRedisCacheCanDeleteByLastPatternWithPrefixByFullKey(string prefix, string key, string value,
+        string result)
+    {
+        var fullKey = $"{prefix}:{key}";
+        await _redisClient.Set(fullKey, new CacheItem()
+        {
+            Value = value,
+            AssemblyName = value.GetType().Assembly.GetName().Name,
+            Type = value.GetType().FullName
+        });
+        await _redisClient.Delete(fullKey);
+        var s = await _redisClient.Get(fullKey);
+        Assert.Equal(s.Value, result);
+    }
+
+    [Theory]
+    [InlineData("", "1111Joe", "18", null)]
+    [InlineData("", "2222Joe", "19", null)]
+    public async void TestRedisCacheCanDeleteByFirstPattern(string prefix, string key, string value, string result)
     {
         await _redisClient.Set(key, new CacheItem()
         {
@@ -123,10 +140,103 @@ public class RedisCacheTests
             AssemblyName = value.GetType().Assembly.GetName().Name,
             Type = value.GetType().FullName
         });
-        await _redisClient.Delete(deleteKey);
+        await _redisClient.Delete("*Joe", prefix);
         var s = await _redisClient.Get(key);
         Assert.Equal(s.Value, result);
     }
+
+    [Theory]
+    [InlineData("Joe", "1111Joe", "18", null)]
+    [InlineData("Joe", "2222Joe", "19", null)]
+    public async void TestRedisCacheCanDeleteByFirstPatternWithPrefix(string prefix, string key, string value,
+        string result)
+    {
+        var fullKey = $"{prefix}:{key}";
+        await _redisClient.Set(fullKey, new CacheItem()
+        {
+            Value = value,
+            AssemblyName = value.GetType().Assembly.GetName().Name,
+            Type = value.GetType().FullName
+        });
+        await _redisClient.Delete("*Joe", prefix);
+        var s = await _redisClient.Get(fullKey);
+        Assert.Equal(s.Value, result);
+    }
+
+    [Theory]
+    [InlineData("", "1111Joe", "*Joe*", "18", null)]
+    [InlineData("", "2222Joe22222", "*Joe*", "19", null)]
+    [InlineData("", "3333Joe22222", "*Joe*", "20", null)]
+    public async void TestRedisCacheCanDeleteByFirstAndLastPattern(string prefix, string key, string deleteKey,
+        string value, string result)
+    {
+        await _redisClient.Set(key, new CacheItem()
+        {
+            Value = value,
+            AssemblyName = value.GetType().Assembly.GetName().Name,
+            Type = value.GetType().FullName
+        });
+        await _redisClient.Delete(deleteKey, prefix);
+        var s = await _redisClient.Get(key);
+        Assert.Equal(s.Value, result);
+    }
+
+    [Theory]
+    [InlineData("Joe", "1111Joe", "*Joe*", "18", null)]
+    [InlineData("Joe", "2222Joe22222", "*Joe*", "19", null)]
+    [InlineData("Joe", "3333Joe22222", "*Joe*", "20", null)]
+    public async void TestRedisCacheCanDeleteByFirstAndLastPatternWithPrefix(string prefix, string key,
+        string deleteKey, string value, string result)
+    {
+        var fullKey = $"{prefix}:{key}";
+        await _redisClient.Set(fullKey, new CacheItem()
+        {
+            Value = value,
+            AssemblyName = value.GetType().Assembly.GetName().Name,
+            Type = value.GetType().FullName
+        });
+        await _redisClient.Delete(deleteKey, prefix);
+        var s = await _redisClient.Get(fullKey);
+        Assert.Equal(s.Value, result);
+    }
+
+    [Theory]
+    [InlineData("", "1111Joe", "*", "18", null)]
+    [InlineData("", "2222Joe22222", "*", "19", null)]
+    [InlineData("", "3333Joe22222", "*", "20", null)]
+    public async void TestRedisCacheCanDeleteByGeneralMatchPattern(string prefix, string key, string deleteKey,
+        string value, string result)
+    {
+        await _redisClient.Set(key, new CacheItem()
+        {
+            Value = value,
+            AssemblyName = value.GetType().Assembly.GetName().Name,
+            Type = value.GetType().FullName
+        });
+        await _redisClient.Delete(deleteKey, prefix);
+        var s = await _redisClient.Get(key);
+        Assert.Equal(s.Value, result);
+    }
+
+    [Theory]
+    [InlineData("Joe", "1111Joe", "*", "18", null)]
+    [InlineData("Joe", "2222Joe22222", "*", "19", null)]
+    [InlineData("Joe", "3333Joe22222", "*", "20", null)]
+    public async void TestRedisCacheCanDeleteByGeneralMatchPatternWithPrefix(string prefix, string key,
+        string deleteKey, string value, string result)
+    {
+        var fullKey = $"{prefix}:{key}";
+        await _redisClient.Set(fullKey, new CacheItem()
+        {
+            Value = value,
+            AssemblyName = value.GetType().Assembly.GetName().Name,
+            Type = value.GetType().FullName
+        });
+        await _redisClient.Delete(deleteKey, prefix);
+        var s = await _redisClient.Get(key);
+        Assert.Equal(s.Value, result);
+    }
+
 
     [Fact]
     public void TestCanGetRedisClient()

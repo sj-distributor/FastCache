@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using AspectCore.DynamicProxy;
@@ -11,7 +12,7 @@ namespace FastCache.Core.Attributes
     {
         private readonly string[] _keys;
         private readonly string _expression;
-        
+
         public sealed override int Order { get; set; }
 
         public EvictableAttribute(string[] keys, string expression)
@@ -24,7 +25,7 @@ namespace FastCache.Core.Attributes
         public override async Task Invoke(AspectContext context, AspectDelegate next)
         {
             await next(context);
-            
+
             var cacheClient = context.ServiceProvider.GetService<ICacheClient>();
 
             var dictionary = new Dictionary<string, object>();
@@ -33,10 +34,10 @@ namespace FastCache.Core.Attributes
             {
                 dictionary.Add(parameterInfos[i].Name, context.Parameters[i]);
             }
-            
+
             foreach (var s in _keys)
             {
-                await cacheClient.Delete(KeyGenerateHelper.GetKey(s, _expression, dictionary));
+                await cacheClient.Delete(KeyGenerateHelper.GetKey(_expression, dictionary), s);
             }
         }
     }

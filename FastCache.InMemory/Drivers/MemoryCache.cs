@@ -54,7 +54,7 @@ namespace FastCache.InMemory.Drivers
             return Task.FromResult(cacheItem);
         }
 
-        public Task Delete(string key)
+        public Task Delete(string key, string? prefix = null)
         {
             if (key.Contains('*'))
             {
@@ -68,20 +68,29 @@ namespace FastCache.InMemory.Drivers
                     key = key[..^1];
                 }
 
+                var queryList = string.IsNullOrEmpty(prefix) ? _dist.Keys : _dist.Keys.Where(x => x.Contains(prefix));
+
                 if (string.IsNullOrEmpty(key))
                 {
-                    _dist.Keys.ToList().ForEach(k => _dist.TryRemove(k, out var _));
+                    queryList.ToList().ForEach(k => _dist.TryRemove(k, out var _));
                 }
                 else
                 {
-                    _dist.Keys.Where(x => x.Contains(key)).ToList().ForEach(k => _dist.TryRemove(k, out var _));
+                    queryList.Where(x => x.Contains(key)).ToList().ForEach(k => _dist.TryRemove(k, out var _));
                 }
             }
             else
             {
-                _dist.TryRemove(key, out var _);
+                var removeKey = string.IsNullOrEmpty(prefix) ? key : $"{prefix}:{key}";
+                _dist.TryRemove(removeKey, out var _);
             }
 
+            return Task.CompletedTask;
+        }
+
+        public Task Delete(string key)
+        {
+            _dist.TryRemove(key, out _);
             return Task.CompletedTask;
         }
 
