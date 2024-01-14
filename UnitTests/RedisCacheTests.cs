@@ -8,8 +8,11 @@ namespace UnitTests;
 
 public class RedisCacheTests
 {
-    private readonly RedisCache _redisClient =
-        new("server=localhost:6379;timeout=5000;MaxMessageSize=1024000;Expire=3600", true);
+    private RedisCache _redisClient;
+    public RedisCacheTests()
+    {
+        _redisClient = new RedisCache("server=localhost:6379;timeout=5000;MaxMessageSize=1024000;Expire=3600", true);
+    }
 
     [Theory]
     [InlineData("anson", "18", "18")]
