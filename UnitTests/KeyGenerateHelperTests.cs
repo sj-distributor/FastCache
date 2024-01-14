@@ -47,7 +47,7 @@ public class KeyGenerateHelperTests
             KeyGenerateHelper.GetKey(prefix, "{company:menus:0:openTime}",
                 new Dictionary<string, object>() { { "company", companyMenus } });
         
-        var milliseconds = companyMenuOpenTime.ToString("ffffff").TrimEnd('0');
+        var milliseconds = companyMenuOpenTime.ToString("fffffff").TrimEnd('0');
         Assert.Equal(companyMenusFirstKey, $"{prefix}:{companyMenuOpenTime:yyyy-MM-ddTHH:mm:ss}.{milliseconds}+00:00");
 
         var companyMerchants = new Company()
