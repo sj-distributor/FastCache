@@ -104,7 +104,7 @@ namespace FastCache.Core.Attributes
             {
                 value = context.ReturnValue;
             }
-
+            
             var returnType = value.GetType();
 
             await cacheClient.Set(key, new CacheItem
@@ -112,8 +112,8 @@ namespace FastCache.Core.Attributes
                 Value = value,
                 CreatedAt = DateTime.Now.Ticks,
                 Expire = _expire > 0 ? DateTime.Now.AddSeconds(_expire).Ticks : DateTime.Now.AddYears(1).Ticks,
-                AssemblyName = returnType.Assembly.GetName().FullName,
-                Type = returnType.FullName ?? string.Empty,
+                AssemblyName = returnType?.Assembly?.GetName()?.FullName ?? typeof(string).Assembly.FullName,
+                Type = returnType?.FullName ?? string.Empty,
             }, _expire);
         }
     }
