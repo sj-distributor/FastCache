@@ -54,7 +54,7 @@ namespace FastCache.InMemory.Drivers
             return Task.FromResult(cacheItem);
         }
 
-        public Task Delete(string key, string? prefix = null)
+        public Task Delete(string key, string prefix = "")
         {
             if (key.Contains('*'))
             {
