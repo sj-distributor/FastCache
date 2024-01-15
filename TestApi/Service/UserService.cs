@@ -28,7 +28,7 @@ public class UserService : IService, IUserService
         return await _dbContext.Set<User>().SingleAsync(x => x.Id == id);
     }
 
-    [Cacheable("user-single", "{user:id}", 60 * 10)]
+    [Cacheable("user-single", "{user:id}{user:thirdPartyIds}", 60 * 10)]
     [Evictable(new[] { "user-single", "users" }, "{user:id}")]
     public virtual async Task<User> Update(User user)
     {

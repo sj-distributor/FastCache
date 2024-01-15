@@ -24,6 +24,7 @@
       <ProjectReference Include="..\FastCache.Core\FastCache.Core.csproj" />
       <ProjectReference Include="..\FastCache.InMemory\FastCache.InMemory.csproj" />
       <ProjectReference Include="..\FastCache.Redis\FastCache.Redis.csproj" />
+      <ProjectReference Include="..\TestApi\TestApi.csproj" />
     </ItemGroup>
 
     <ItemGroup>

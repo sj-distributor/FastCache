@@ -80,36 +80,70 @@ public class MultiBucketsMemoryCacheTests
     }
 
     [Theory]
-    [InlineData("anson555", "18", null)]
-    [InlineData("anson555555", "19", null)]
-    public async void TestMemoryCacheCanDeleteByFirstPattern(string key, string value, string result)
+    [InlineData("", "anson555", "18", null)]
+    [InlineData("", "anson555555", "19", null)]
+    public async void TestMemoryCacheCanDeleteByFirstPattern(string prefix, string key, string value, string result)
     {
         await _memoryCache.Set(key, new CacheItem()
         {
             Value = value,
             Expire = DateTime.Now.AddSeconds(20).Ticks
         });
-        await _memoryCache.Delete("anson*");
+        await _memoryCache.Delete("anson*", prefix);
         var s = await _memoryCache.Get(key);
         Assert.Equal(s.Value, result);
     }
-    
     
     [Theory]
-    [InlineData("555Joe", "18", null)]
-    [InlineData("555555Joe", "19", null)]
-    public async void TestMemoryCacheCanDeleteByLastPattern(string key, string value, string result)
+    [InlineData("anson", "anson555", "18", null)]
+    [InlineData("anson", "anson555555", "19", null)]
+    public async void TestMemoryCacheCanDeleteByFirstPatternWithPrefix(string prefix, string key, string value, string result)
+    {
+        var fullKey = $"{prefix}:{key}";
+        await _memoryCache.Set(fullKey, new CacheItem()
+        {
+            Value = value,
+            Expire = DateTime.Now.AddSeconds(20).Ticks
+        });
+        await _memoryCache.Delete("anson*", prefix);
+        var s = await _memoryCache.Get(key);
+        Assert.Equal(s.Value, result);
+    }
+
+
+    [Theory]
+    [InlineData("", "555Joe", "18", null)]
+    [InlineData("", "555555Joe", "19", null)]
+    public async void TestMemoryCacheCanDeleteByLastPattern(string prefix, string key, string value, string result)
     {
         await _memoryCache.Set(key, new CacheItem()
         {
             Value = value,
             Expire = DateTime.Now.AddSeconds(20).Ticks
         });
-        await _memoryCache.Delete("*Joe");
+        await _memoryCache.Delete("*Joe", prefix);
         var s = await _memoryCache.Get(key);
         Assert.Equal(s.Value, result);
     }
-    
+
+
+    [Theory]
+    [InlineData("Joe", "555Joe", "18", null)]
+    [InlineData("Joe", "555555Joe", "19", null)]
+    public async void TestMemoryCacheCanDeleteByLastPatternWithPrefix(string prefix, string key, string value,
+        string result)
+    {
+        var fullKey = $"{prefix}:{key}";
+        await _memoryCache.Set(fullKey, new CacheItem()
+        {
+            Value = value,
+            Expire = DateTime.Now.AddSeconds(20).Ticks
+        });
+        await _memoryCache.Delete("*Joe", prefix);
+        var s = await _memoryCache.Get(key);
+        Assert.Equal(s.Value, result);
+    }
+
     [Theory]
     [InlineData("ansonExpire11", "18", null)]
     [InlineData("ansonExpire22", "19", null)]

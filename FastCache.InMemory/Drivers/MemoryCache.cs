@@ -48,32 +48,49 @@ namespace FastCache.InMemory.Drivers
                 Delete(key);
                 return Task.FromResult(new CacheItem());
             }
-            
+
             ++cacheItem.Hits;
-            
+
             return Task.FromResult(cacheItem);
         }
 
-        public Task Delete(string key)
+        public Task Delete(string key, string prefix = "")
         {
             if (key.Contains('*'))
             {
-                if (key.First() == '*')
+                if (key.Length > 0 && key.First() == '*')
                 {
-                    key = key.Substring(1, key.Length);
+                    key = key[1..];
                 }
-                else if (key.Last() == '*')
+
+                if (key.Length > 0 && key.Last() == '*')
                 {
                     key = key[..^1];
                 }
 
-                _dist.Keys.Where(x => x.Contains(key)).ToList().ForEach(k => _dist.TryRemove(k, out var _));
+                var queryList = string.IsNullOrEmpty(prefix) ? _dist.Keys : _dist.Keys.Where(x => x.Contains(prefix));
+
+                if (string.IsNullOrEmpty(key))
+                {
+                    queryList.ToList().ForEach(k => _dist.TryRemove(k, out var _));
+                }
+                else
+                {
+                    queryList.Where(x => x.Contains(key)).ToList().ForEach(k => _dist.TryRemove(k, out var _));
+                }
             }
             else
             {
-                _dist.TryRemove(key, out var _);
+                var removeKey = string.IsNullOrEmpty(prefix) ? key : $"{prefix}:{key}";
+                _dist.TryRemove(removeKey, out var _);
             }
 
+            return Task.CompletedTask;
+        }
+
+        public Task Delete(string key)
+        {
+            _dist.TryRemove(key, out _);
             return Task.CompletedTask;
         }
 
@@ -85,7 +102,6 @@ namespace FastCache.InMemory.Drivers
 
             if (_maxMemoryPolicy == MaxMemoryPolicy.RANDOM)
             {
-             
                 foreach (var key in _dist.Keys.TakeLast(removeRange))
                 {
                     _dist.Remove(key, out var _);

@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using FastCache.Core.Entity;
+using FastCache.Core.Utils;
 using FastCache.InMemory.Drivers;
 using FastCache.InMemory.Enum;
 using Xunit;
@@ -79,16 +80,33 @@ public class MemoryCacheTests
 
 
     [Theory]
-    [InlineData("anson1111", "18", null)]
-    [InlineData("anson2222", "19", null)]
-    public async void TestMemoryCacheCanDeleteByPattern(string key, string value, string result)
+    [InlineData("", "anson1111", "18", null)]
+    [InlineData("", "anson2222", "19", null)]
+    public async void TestMemoryCacheCanDeleteByPattern(string prefix, string key, string value, string result)
     {
         await _memoryCache.Set(key, new CacheItem()
         {
             Value = value,
             Expire = DateTime.Now.AddSeconds(20).Ticks
         });
-        await _memoryCache.Delete("anson*");
+        await _memoryCache.Delete("anson*", prefix);
+        var s = await _memoryCache.Get(key);
+        Assert.Equal(s.Value, result);
+    }
+
+    [Theory]
+    [InlineData("anson", "anson1111", "18", null)]
+    [InlineData("anson", "anson2222", "19", null)]
+    public async void TestMemoryCacheCanDeleteByPatternWithPrefix(string prefix, string key, string value,
+        string result)
+    {
+        var fullKey = $"{prefix}:{key}";
+        await _memoryCache.Set(fullKey, new CacheItem()
+        {
+            Value = value,
+            Expire = DateTime.Now.AddSeconds(20).Ticks
+        });
+        await _memoryCache.Delete("anson*", prefix);
         var s = await _memoryCache.Get(key);
         Assert.Equal(s.Value, result);
     }
@@ -106,5 +124,79 @@ public class MemoryCacheTests
         Thread.Sleep(TimeSpan.FromSeconds(1.1));
         var cacheItem = await _memoryCache.Get(key);
         Assert.Equal(cacheItem.Value, result);
+    }
+
+    [Theory]
+    [InlineData("", "ansonExpire333", "*anson", "18", null)]
+    [InlineData("", "ansonExpire444", "anson*", "19", null)]
+    [InlineData("", "ansonExpire555", "*", "20", null)]
+    public async void TestMemoryCacheCanDeleteAsterisk(string prefix, string key, string deleteKey, string value,
+        string result)
+    {
+        await _memoryCache.Set(key, new CacheItem()
+        {
+            Value = value,
+            Expire = DateTime.Now.AddSeconds(20).Ticks
+        });
+        await _memoryCache.Delete(deleteKey, prefix);
+        var s = await _memoryCache.Get(key);
+        Assert.Equal(s.Value, result);
+    }
+
+    [Theory]
+    [InlineData("anson", "ansonExpire333", "*anson", "18", null)]
+    [InlineData("anson", "ansonExpire444", "anson*", "19", null)]
+    [InlineData("anson", "ansonExpire555", "*", "20", null)]
+    public async void TestMemoryCacheCanDeleteAsteriskWithPrefix(string prefix, string key, string deleteKey,
+        string value,
+        string result)
+    {
+        var fullKey = $"{prefix}:{key}";
+        await _memoryCache.Set(fullKey, new CacheItem()
+        {
+            Value = value,
+            Expire = DateTime.Now.AddSeconds(20).Ticks
+        });
+        await _memoryCache.Delete(deleteKey, prefix);
+        var s = await _memoryCache.Get(key);
+        Assert.Equal(s.Value, result);
+    }
+
+    [Theory]
+    [InlineData("", "ansonExpire333", "*", "18", null)]
+    [InlineData("", "ansonExpire444", "*", "19", null)]
+    [InlineData("", "ansonExpire555", "*", "20", null)]
+    public async void TestMemoryCacheCanDeleteByGeneralMatchAsterisk(string prefix, string key, string deleteKey,
+        string value,
+        string result)
+    {
+        await _memoryCache.Set(key, new CacheItem()
+        {
+            Value = value,
+            Expire = DateTime.Now.AddSeconds(20).Ticks
+        });
+        await _memoryCache.Delete(deleteKey, prefix);
+        var s = await _memoryCache.Get(key);
+        Assert.Equal(s.Value, result);
+    }
+
+    [Theory]
+    [InlineData("anson", "ansonExpire333", "*", "18", null)]
+    [InlineData("anson", "ansonExpire444", "*", "19", null)]
+    [InlineData("anson", "ansonExpire555", "*", "20", null)]
+    public async void TestMemoryCacheCanDeleteByGeneralMatchAsteriskWithPrefix(string prefix, string key,
+        string deleteKey,
+        string value,
+        string result)
+    {
+        var fullKey = $"{prefix}:{key}";
+        await _memoryCache.Set(fullKey, new CacheItem()
+        {
+            Value = value,
+            Expire = DateTime.Now.AddSeconds(20).Ticks
+        });
+        await _memoryCache.Delete(deleteKey, prefix);
+        var s = await _memoryCache.Get(key);
+        Assert.Equal(s.Value, result);
     }
 }

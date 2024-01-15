@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
+using FastCache.Core.Utils;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using TestApi.DB;
@@ -44,7 +45,7 @@ public class UserApiRequestCacheTests : IClassFixture<WebApplicationFactory<Prog
         };
 
         foreach (var user in users)
-        { 
+        {
             _httpClient.PostAsJsonAsync("/user", user);
         }
     }
@@ -83,7 +84,8 @@ public class UserApiRequestCacheTests : IClassFixture<WebApplicationFactory<Prog
         var resultForPost = await _httpClient.PutAsJsonAsync("/user?id=3", new User()
         {
             Id = "3",
-            Name = "anson33"
+            Name = "anson33",
+            ThirdPartyIds = new List<long>() { 123, 456, 789 }
         });
 
         var stringAsync = await resultForPost.Content.ReadAsStringAsync();
@@ -100,13 +102,12 @@ public class UserApiRequestCacheTests : IClassFixture<WebApplicationFactory<Prog
     [Fact]
     public async void CacheAndEvictOther()
     {
-        
         await _httpClient.PostAsJsonAsync("/user", new User()
         {
             Id = "5",
             Name = "anson5"
         });
-        
+
         var resp1 = await _httpClient.GetAsync("/user/users?page=1");
         Assert.True(resp1.StatusCode == HttpStatusCode.OK);
 

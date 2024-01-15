@@ -34,7 +34,7 @@ namespace FastCache.Redis.Driver
             {
                 cacheItem.Value = JsonConvert.SerializeObject(cacheItem.Value);
             }
-            
+
             if (expire > 0)
             {
                 _redisClient.Add(key, cacheItem, (int)expire);
@@ -51,22 +51,47 @@ namespace FastCache.Redis.Driver
         {
             var cacheValue = _redisClient.Get<CacheItem>(key);
             if (cacheValue?.AssemblyName == null || cacheValue?.Type == null) return Task.FromResult(new CacheItem());
-            
+
             var assembly = Assembly.Load(cacheValue.AssemblyName);
             var valueType = assembly.GetType(cacheValue.Type, true, true);
             cacheValue.Value = JsonConvert.DeserializeObject(cacheValue.Value as string, valueType);
             return Task.FromResult(cacheValue);
-
         }
 
         public Task Delete(string key)
+        {
+            _redisClient.Remove(key);
+            return Task.CompletedTask;
+        }
+
+
+        public Task Delete(string key, string prefix = "")
         {
             if (key.Contains('*'))
             {
                 string[] list = { };
                 if (key.First() == '*' || key.Last() == '*')
                 {
-                    list = _redisClient.Search(key, 1000).ToArray();
+                    if (string.IsNullOrEmpty(prefix))
+                    {
+                        list = _redisClient.Search(key, 1000).ToArray();
+                    }
+                    else
+                    {
+                        if (key.Length > 0 && key.First() == '*')
+                        {
+                            key = key[1..];
+                        }
+
+                        if (key.Length > 0 && key.Last() == '*')
+                        {
+                            key = key[..^1];
+                        }
+
+                        list = string.IsNullOrEmpty(key)
+                            ? _redisClient.Search($"{prefix}*", 1000).ToArray()
+                            : _redisClient.Search($"{prefix}*", 1000).Where(x => x.Contains(key)).ToArray();
+                    }
                 }
                 else
                 {
@@ -80,7 +105,8 @@ namespace FastCache.Redis.Driver
             }
             else
             {
-                _redisClient.Remove(key);
+                var removeKey = string.IsNullOrEmpty(prefix) ? key : $"{prefix}:{key}";
+                _redisClient.Remove(removeKey);
             }
 
             return Task.CompletedTask;

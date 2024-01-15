@@ -66,7 +66,7 @@ namespace FastCache.InMemory.Drivers
             return Task.FromResult(cacheItem);
         }
 
-        public Task Delete(string key)
+        public Task Delete(string key, string prefix = "")
         {
             if (key.Contains('*'))
             {
@@ -79,16 +79,27 @@ namespace FastCache.InMemory.Drivers
                     key = key[..^1];
                 }
 
-                foreach (var bucket in _map.Keys.Select(bucketId => GetBucket(bucketId)))
+
+                foreach (var bucket in _map.Keys.Select(GetBucket))
                 {
-                    bucket.Keys.Where(x => x.Contains(key)).ToList().ForEach(k => bucket.TryRemove(k, out var _));
+                    var queryList = !string.IsNullOrEmpty(prefix)
+                        ? bucket.Keys.Where(x => x.Contains(prefix))
+                        : bucket.Keys;
+                    queryList.Where(x => x.Contains(key)).ToList().ForEach(k => bucket.TryRemove(k, out var _));
                 }
             }
             else
             {
-                GetBucket(HashKey(key)).TryRemove(key, out var _);
+                var removeKey = string.IsNullOrEmpty(prefix) ? key : $"{prefix}:{key}";
+                GetBucket(HashKey(removeKey)).TryRemove(removeKey, out var _);
             }
 
+            return Task.CompletedTask;
+        }
+
+        public Task Delete(string key)
+        {
+            GetBucket(HashKey(key)).TryRemove(key, out _);
             return Task.CompletedTask;
         }
 
@@ -106,7 +117,7 @@ namespace FastCache.InMemory.Drivers
             {
                 return bucket;
             }
-            
+
             throw new Exception($"Not Found Bucket: {bucketId}");
         }
 
