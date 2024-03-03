@@ -74,7 +74,7 @@ jobs:
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v2
         with:
-          dotnet-version: 8.0
+          dotnet-version: 8.0.0
 
       - name: Set up Redis
         uses: supercharge/redis-github-action@1.4.0
