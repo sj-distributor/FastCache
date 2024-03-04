@@ -98,6 +98,8 @@ jobs:
 
       - name: Pack FastCache.Core
         run: dotnet pack FastCache.Core -p:PackageVersion=${{ steps.gitversion.outputs.SemVer }} --configuration=Release -o Core
+      - name: show me the dir
+        run: ls -al ./Core
       - name: Push FastCache.Core to nuget
         run: dotnet nuget push Core/FastCache.Core.${{ steps.gitversion.outputs.SemVer }}.nupkg --skip-duplicate --no-symbols true --api-key ${{secrets.NUGET}} --source https://api.nuget.org/v3/index.json
 
