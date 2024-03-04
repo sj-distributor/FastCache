@@ -25,12 +25,12 @@ jobs:
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
-          
+
       - name: Install GitVersion
         uses: gittools/actions/gitversion/setup@v0.9.15
         with:
           versionSpec: '5.12.0'
-          includePrerelease: true    
+          includePrerelease: true
 
       - name: Determine Version
         id: gitversion
@@ -89,7 +89,7 @@ jobs:
         with:
           token: ${{secrets.CODECOV_TOKEN}}
           file: ${{ github.workspace }}/UnitTests/TestResults/**/coverage.cobertura.xml
-      
+
       - name: Publish Code Coverage IntegrationTests
         uses: codecov/codecov-action@v1.0.2
         with:
@@ -101,22 +101,22 @@ jobs:
       - name: show me the dir
         run: ls -al ./Core
       - name: Push FastCache.Core to nuget
-        run: dotnet nuget push Core/FastCache.Core.${{ steps.gitversion.outputs.SemVer }}.nupkg --skip-duplicate --no-symbols true --api-key ${{secrets.NUGET}} --source https://api.nuget.org/v3/index.json
+        run: dotnet nuget push ./Core/FastCache.Core.${{ steps.gitversion.outputs.SemVer }}.nupkg  --api-key ${{secrets.NUGET}} --source https://api.nuget.org/v3/index.json --skip-duplicate --no-symbols true
 
       - name: Pack FastCache.InMemory
         run: dotnet pack FastCache.InMemory -p:PackageVersion=${{ steps.gitversion.outputs.SemVer }} --configuration=Release -o InMemory
       - name: Push FastCache.InMemory to nuget
-        run: dotnet nuget push InMemory/FastCache.InMemory.${{ steps.gitversion.outputs.SemVer }}.nupkg --skip-duplicate --no-symbols true --api-key ${{secrets.NUGET}} --source https://api.nuget.org/v3/index.json
-        
+        run: dotnet nuget push ./InMemory/FastCache.InMemory.${{ steps.gitversion.outputs.SemVer }}.nupkg --api-key ${{secrets.NUGET}} --source https://api.nuget.org/v3/index.json --skip-duplicate --no-symbols true
+
       - name: Pack FastCache.Redis
         run: dotnet pack FastCache.Redis -p:PackageVersion=${{ steps.gitversion.outputs.SemVer }} --configuration=Release -o Redis
       - name: Push FastCache.Redis to nuget
-        run: dotnet nuget push Redis/FastCache.Redis.${{ steps.gitversion.outputs.SemVer }}.nupkg --skip-duplicate --no-symbols true --api-key ${{secrets.NUGET}} --source https://api.nuget.org/v3/index.json  
-        
+        run: dotnet nuget push ./Redis/FastCache.Redis.${{ steps.gitversion.outputs.SemVer }}.nupkg --api-key ${{secrets.NUGET}} --source https://api.nuget.org/v3/index.json --skip-duplicate --no-symbols true
+
       - name: Pack FastCache.MultiSource
         run: dotnet pack FastCache.MultiSource -p:PackageVersion=${{ steps.gitversion.outputs.SemVer }} --configuration=Release -o MultiSource
       - name: Push FastCache.Redis to nuget
-        run: dotnet nuget push MultiSource/FastCache.MultiSource.${{ steps.gitversion.outputs.SemVer }}.nupkg --skip-duplicate --no-symbols true --api-key ${{secrets.NUGET}} --source https://api.nuget.org/v3/index.json
+        run: dotnet nuget push ./MultiSource/FastCache.MultiSource.${{ steps.gitversion.outputs.SemVer }}.nupkg --api-key ${{secrets.NUGET}} --source https://api.nuget.org/v3/index.json --skip-duplicate --no-symbols true
 
 #      - name: Push to nuget
 #        run: dotnet nuget push artifacts/NetCoreCache.${{ steps.gitversion.outputs.SemVer }}.nupkg --skip-duplicate --no-symbols true --api-key ${{secrets.NUGET}} --source https://api.nuget.org/v3/index.json
