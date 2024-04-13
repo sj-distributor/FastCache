@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using FastCache.Core.Driver;
 using FastCache.Core.Entity;
 using FastCache.InMemory.Enum;
+using FastCache.InMemory.Extension;
 
 namespace FastCache.InMemory.Drivers
 {
@@ -72,17 +73,18 @@ namespace FastCache.InMemory.Drivers
 
                 if (string.IsNullOrEmpty(key))
                 {
-                    queryList.ToList().ForEach(k => _dist.TryRemove(k, out var _));
+                    queryList.ToList().ForEach(k => _dist.TryRemove(k, out var _, 3));
                 }
                 else
                 {
-                    queryList.Where(x => x.Contains(key)).ToList().ForEach(k => _dist.TryRemove(k, out var _));
+                    queryList.Where(x => x.Contains(key)).ToList().ForEach(k =>  _dist.TryRemove(k, out var _, 3));
                 }
             }
             else
             {
                 var removeKey = string.IsNullOrEmpty(prefix) ? key : $"{prefix}:{key}";
-                _dist.TryRemove(removeKey, out var _);
+
+                _dist.TryRemove(removeKey, out var _, 3);
             }
 
             return Task.CompletedTask;
@@ -90,7 +92,7 @@ namespace FastCache.InMemory.Drivers
 
         public Task Delete(string key)
         {
-            _dist.TryRemove(key, out _);
+            _dist.TryRemove(key, out var _, 3);
             return Task.CompletedTask;
         }
 
@@ -104,7 +106,7 @@ namespace FastCache.InMemory.Drivers
             {
                 foreach (var key in _dist.Keys.TakeLast(removeRange))
                 {
-                    _dist.Remove(key, out var _);
+                    _dist.TryRemove(key, out var _, 3);
                 }
             }
             else
@@ -125,7 +127,7 @@ namespace FastCache.InMemory.Drivers
 
                 foreach (var keyValuePair in keyValuePairs.TakeLast(removeRange))
                 {
-                    _dist.Remove(keyValuePair.Key, out var _);
+                    _dist.TryRemove(keyValuePair.Key, out var _, 3);
                 }
             }
         }

@@ -1,5 +1,6 @@
 using System;
 using System.Threading;
+using System.Threading.Tasks;
 using FastCache.Core.Entity;
 using FastCache.Core.Utils;
 using FastCache.InMemory.Drivers;
@@ -197,6 +198,37 @@ public class MemoryCacheTests
         });
         await _memoryCache.Delete(deleteKey, prefix);
         var s = await _memoryCache.Get(key);
+        Assert.Equal(s.Value, result);
+    }
+    
+    [Theory]
+    [InlineData("anson", "ansonExpire333", "*", "18", null)]
+    [InlineData("anson", "ansonExpire444", "*", "19", null)]
+    [InlineData("anson", "ansonExpire555", "*", "20", null)]
+    public async void TestMemoryCacheDoubleDelete(string prefix, string key,
+        string deleteKey,
+        string value,
+        string result)
+    {
+        var fullKey = $"{prefix}:{key}";
+        await _memoryCache.Set(fullKey, new CacheItem()
+        {
+            Value = value,
+            Expire = DateTime.Now.AddSeconds(20).Ticks
+        });
+        await _memoryCache.Delete(deleteKey, prefix);
+        var s = await _memoryCache.Get(key);
+        Assert.Equal(s.Value, result);
+
+        await _memoryCache.Set(fullKey, new CacheItem()
+        {
+            Value = value,
+            Expire = DateTime.Now.AddSeconds(20).Ticks
+        });
+        
+        await Task.Delay(TimeSpan.FromSeconds(4));
+        
+        s = await _memoryCache.Get(key);
         Assert.Equal(s.Value, result);
     }
 }
