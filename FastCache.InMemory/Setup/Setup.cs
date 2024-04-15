@@ -8,23 +8,30 @@ namespace FastCache.InMemory.Setup
     public static class Setup
     {
         public static void AddInMemoryCache(
-            this IServiceCollection services, 
+            this IServiceCollection services,
             int maxCapacity = 1000000,
-            MaxMemoryPolicy maxMemoryPolicy = MaxMemoryPolicy.LRU, int cleanUpPercentage = 10
+            MaxMemoryPolicy maxMemoryPolicy = MaxMemoryPolicy.LRU, int cleanUpPercentage = 10, int delaySeconds = 2
         )
         {
-            services.AddSingleton<ICacheClient>(new MemoryCache(maxCapacity, maxMemoryPolicy, cleanUpPercentage));
+            services.AddSingleton<ICacheClient>(
+                new MemoryCache(
+                    maxCapacity, maxMemoryPolicy, cleanUpPercentage,
+                    delaySeconds: delaySeconds
+                )
+            );
         }
-        
+
         public static void AddMultiBucketsInMemoryCache(
             this IServiceCollection services,
             uint buckets = 5,
             uint maxCapacity = 500000,
             MaxMemoryPolicy maxMemoryPolicy = MaxMemoryPolicy.LRU,
-            int cleanUpPercentage = 10)
+            int cleanUpPercentage = 10, int delaySeconds = 2)
         {
             services.AddSingleton<ICacheClient>(
-                new MultiBucketsMemoryCache(buckets, maxCapacity, maxMemoryPolicy, cleanUpPercentage));
+                new MultiBucketsMemoryCache(
+                    buckets, maxCapacity, maxMemoryPolicy, cleanUpPercentage,
+                    delaySeconds: delaySeconds));
         }
     }
 }
