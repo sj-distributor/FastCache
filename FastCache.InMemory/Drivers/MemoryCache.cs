@@ -15,12 +15,14 @@ namespace FastCache.InMemory.Drivers
         private readonly int _maxCapacity;
         private readonly MaxMemoryPolicy _maxMemoryPolicy;
         private static int _cleanupRange;
+        private readonly int _delaySeconds;
 
         private static ConcurrentDictionary<string, CacheItem> _dist = null!;
 
         public MemoryCache(int maxCapacity = 5000000, MaxMemoryPolicy maxMemoryPolicy = MaxMemoryPolicy.LRU,
-            int cleanUpPercentage = 10)
+            int cleanUpPercentage = 10, int delaySeconds = 2)
         {
+            _delaySeconds = delaySeconds;
             _maxCapacity = maxCapacity;
             _maxMemoryPolicy = maxMemoryPolicy;
             _cleanupRange = _maxCapacity - (_maxCapacity / cleanUpPercentage);
@@ -73,18 +75,19 @@ namespace FastCache.InMemory.Drivers
 
                 if (string.IsNullOrEmpty(key))
                 {
-                    queryList.ToList().ForEach(k => _dist.TryRemove(k, out var _, 3));
+                    queryList.ToList().ForEach(k => _dist.TryRemove(k, out _, _delaySeconds));
                 }
                 else
                 {
-                    queryList.Where(x => x.Contains(key)).ToList().ForEach(k =>  _dist.TryRemove(k, out var _, 3));
+                    queryList.Where(x => x.Contains(key)).ToList()
+                        .ForEach(k => _dist.TryRemove(k, out _, _delaySeconds));
                 }
             }
             else
             {
                 var removeKey = string.IsNullOrEmpty(prefix) ? key : $"{prefix}:{key}";
 
-                _dist.TryRemove(removeKey, out var _, 3);
+                _dist.TryRemove(removeKey, out _, _delaySeconds);
             }
 
             return Task.CompletedTask;
@@ -92,7 +95,7 @@ namespace FastCache.InMemory.Drivers
 
         public Task Delete(string key)
         {
-            _dist.TryRemove(key, out var _, 3);
+            _dist.TryRemove(key, out _, _delaySeconds);
             return Task.CompletedTask;
         }
 
@@ -106,7 +109,7 @@ namespace FastCache.InMemory.Drivers
             {
                 foreach (var key in _dist.Keys.TakeLast(removeRange))
                 {
-                    _dist.TryRemove(key, out var _, 3);
+                    _dist.TryRemove(key, out _, _delaySeconds);
                 }
             }
             else
@@ -127,7 +130,7 @@ namespace FastCache.InMemory.Drivers
 
                 foreach (var keyValuePair in keyValuePairs.TakeLast(removeRange))
                 {
-                    _dist.TryRemove(keyValuePair.Key, out var _, 3);
+                    _dist.TryRemove(keyValuePair.Key, out _, _delaySeconds);
                 }
             }
         }

@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using FastCache.Core.Driver;
 using FastCache.Core.Entity;
 using FastCache.InMemory.Enum;
+using FastCache.InMemory.Extension;
 
 namespace FastCache.InMemory.Drivers
 {
@@ -17,18 +18,20 @@ namespace FastCache.InMemory.Drivers
         private readonly MaxMemoryPolicy _maxMemoryPolicy;
         private readonly uint _bucketMaxCapacity;
         private static int _cleanupRange;
+        private readonly int _delaySeconds;
 
         private readonly Dictionary<uint, ConcurrentDictionary<string, CacheItem>> _map =
             new Dictionary<uint, ConcurrentDictionary<string, CacheItem>>();
 
         public MultiBucketsMemoryCache(uint buckets = 5, uint bucketMaxCapacity = 500000,
-            MaxMemoryPolicy maxMemoryPolicy = MaxMemoryPolicy.LRU, int cleanUpPercentage = 10)
+            MaxMemoryPolicy maxMemoryPolicy = MaxMemoryPolicy.LRU, int cleanUpPercentage = 10, int delaySeconds = 2)
         {
             if (buckets > 128)
             {
                 throw new Exception("buckets must less than 128");
             }
 
+            _delaySeconds = delaySeconds;
             _buckets = buckets;
             _bucketMaxCapacity = bucketMaxCapacity;
             _maxMemoryPolicy = maxMemoryPolicy;
@@ -85,13 +88,14 @@ namespace FastCache.InMemory.Drivers
                     var queryList = !string.IsNullOrEmpty(prefix)
                         ? bucket.Keys.Where(x => x.Contains(prefix))
                         : bucket.Keys;
-                    queryList.Where(x => x.Contains(key)).ToList().ForEach(k => bucket.TryRemove(k, out var _));
+                    queryList.Where(x => x.Contains(key)).ToList()
+                        .ForEach(k => bucket.TryRemove(k, out _, _delaySeconds));
                 }
             }
             else
             {
                 var removeKey = string.IsNullOrEmpty(prefix) ? key : $"{prefix}:{key}";
-                GetBucket(HashKey(removeKey)).TryRemove(removeKey, out var _);
+                GetBucket(HashKey(removeKey)).TryRemove(removeKey, out _, _delaySeconds);
             }
 
             return Task.CompletedTask;
@@ -99,7 +103,7 @@ namespace FastCache.InMemory.Drivers
 
         public Task Delete(string key)
         {
-            GetBucket(HashKey(key)).TryRemove(key, out _);
+            GetBucket(HashKey(key)).TryRemove(key, out _, _delaySeconds);
             return Task.CompletedTask;
         }
 
@@ -129,7 +133,7 @@ namespace FastCache.InMemory.Drivers
             {
                 foreach (var key in bucket.Keys.TakeLast(removeRange))
                 {
-                    bucket.Remove(key, out var _);
+                    bucket.TryRemove(key, out _, _delaySeconds);
                 }
             }
             else
@@ -150,7 +154,7 @@ namespace FastCache.InMemory.Drivers
 
                 foreach (var keyValuePair in keyValuePairs.TakeLast(removeRange))
                 {
-                    bucket.Remove(keyValuePair.Key, out var _);
+                    bucket.TryRemove(keyValuePair.Key, out _, _delaySeconds);
                 }
             }
         }
