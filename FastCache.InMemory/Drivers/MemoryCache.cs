@@ -46,7 +46,7 @@ namespace FastCache.InMemory.Drivers
         {
             if (!_dist.TryGetValue(key, out var cacheItem)) return Task.FromResult(new CacheItem());
 
-            if (cacheItem.Expire < DateTime.Now.Ticks)
+            if (cacheItem.Expire < DateTime.UtcNow.Ticks)
             {
                 Delete(key);
                 return Task.FromResult(new CacheItem());
