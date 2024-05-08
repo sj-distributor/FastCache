@@ -36,7 +36,7 @@ namespace FastCache.InMemory.Drivers
             {
                 ReleaseCached();
             }
-
+            
             _dist.TryAdd(key, cacheItem);
 
             return Task.CompletedTask;

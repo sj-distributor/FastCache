@@ -31,8 +31,8 @@ public class MemoryCacheTests
             memoryCache.Set($"{i}", new CacheItem()
             {
                 Value = i,
-                CreatedAt = DateTime.Now.AddSeconds(i).Ticks,
-                Expire = DateTime.Now.AddHours(20).Ticks,
+                CreatedAt = DateTime.UtcNow.AddSeconds(i).Ticks,
+                Expire = DateTime.UtcNow.AddHours(20).Ticks,
                 Hits = (ulong)i + 1
             });
             for (var j = 0; j < i; j++)
@@ -58,7 +58,7 @@ public class MemoryCacheTests
         await _memoryCache.Set(key, new CacheItem()
         {
             Value = value,
-            Expire = DateTime.Now.AddSeconds(20).Ticks
+            Expire = DateTime.UtcNow.AddSeconds(20).Ticks
         });
         var s = await _memoryCache.Get(key);
         Assert.Equal(s.Value, result);
@@ -72,7 +72,7 @@ public class MemoryCacheTests
         await _memoryCache.Set(key, new CacheItem()
         {
             Value = value,
-            Expire = DateTime.Now.AddSeconds(20).Ticks
+            Expire = DateTime.UtcNow.AddSeconds(20).Ticks
         });
         await _memoryCache.Delete(key);
         var s = await _memoryCache.Get(key);
@@ -88,7 +88,7 @@ public class MemoryCacheTests
         await _memoryCache.Set(key, new CacheItem()
         {
             Value = value,
-            Expire = DateTime.Now.AddSeconds(20).Ticks
+            Expire = DateTime.UtcNow.AddSeconds(20).Ticks
         });
         await _memoryCache.Delete("anson*", prefix);
         var s = await _memoryCache.Get(key);
@@ -105,7 +105,7 @@ public class MemoryCacheTests
         await _memoryCache.Set(fullKey, new CacheItem()
         {
             Value = value,
-            Expire = DateTime.Now.AddSeconds(20).Ticks
+            Expire = DateTime.UtcNow.AddSeconds(20).Ticks
         });
         await _memoryCache.Delete("anson*", prefix);
         var s = await _memoryCache.Get(key);
@@ -137,7 +137,7 @@ public class MemoryCacheTests
         await _memoryCache.Set(key, new CacheItem()
         {
             Value = value,
-            Expire = DateTime.Now.AddSeconds(20).Ticks
+            Expire = DateTime.UtcNow.AddSeconds(20).Ticks
         });
         await _memoryCache.Delete(deleteKey, prefix);
         var s = await _memoryCache.Get(key);
@@ -156,7 +156,7 @@ public class MemoryCacheTests
         await _memoryCache.Set(fullKey, new CacheItem()
         {
             Value = value,
-            Expire = DateTime.Now.AddSeconds(20).Ticks
+            Expire = DateTime.UtcNow.AddSeconds(20).Ticks
         });
         await _memoryCache.Delete(deleteKey, prefix);
         var s = await _memoryCache.Get(key);
@@ -174,7 +174,7 @@ public class MemoryCacheTests
         await _memoryCache.Set(key, new CacheItem()
         {
             Value = value,
-            Expire = DateTime.Now.AddSeconds(20).Ticks
+            Expire = DateTime.UtcNow.AddSeconds(20).Ticks
         });
         await _memoryCache.Delete(deleteKey, prefix);
         var s = await _memoryCache.Get(key);
@@ -194,7 +194,7 @@ public class MemoryCacheTests
         await _memoryCache.Set(fullKey, new CacheItem()
         {
             Value = value,
-            Expire = DateTime.Now.AddSeconds(20).Ticks
+            Expire = DateTime.UtcNow.AddSeconds(20).Ticks
         });
         await _memoryCache.Delete(deleteKey, prefix);
         var s = await _memoryCache.Get(key);
@@ -214,7 +214,7 @@ public class MemoryCacheTests
         await _memoryCache.Set(fullKey, new CacheItem()
         {
             Value = value,
-            Expire = DateTime.Now.AddSeconds(20).Ticks
+            Expire = DateTime.UtcNow.AddSeconds(20).Ticks
         });
         await _memoryCache.Delete(deleteKey, prefix);
         var s = await _memoryCache.Get(key);
@@ -223,7 +223,7 @@ public class MemoryCacheTests
         await _memoryCache.Set(fullKey, new CacheItem()
         {
             Value = value,
-            Expire = DateTime.Now.AddSeconds(20).Ticks
+            Expire = DateTime.UtcNow.AddSeconds(20).Ticks
         });
         
         await Task.Delay(TimeSpan.FromSeconds(4));
