@@ -59,7 +59,7 @@ namespace FastCache.InMemory.Drivers
             var bucket = GetBucket(HashKey(key));
 
             if (!bucket.TryGetValue(key, out var cacheItem)) return Task.FromResult(new CacheItem());
-            if (cacheItem.Expire < DateTime.Now.Ticks)
+            if (cacheItem.Expire < DateTime.UtcNow.Ticks)
             {
                 Delete(key);
                 return Task.FromResult(new CacheItem());

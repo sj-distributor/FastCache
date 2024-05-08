@@ -54,19 +54,19 @@ public class MultiSourceApiRequestCacheTests : IClassFixture<WebApplicationFacto
     [InlineData("/MultiSourceInMemory")]
     public async void RequestCanCache(string baseUrl)
     {
-        var start = DateTime.Now.Ticks;
+        var start = DateTime.UtcNow.Ticks;
         var resp1 = await _httpClient.GetAsync($"{baseUrl}/?id=1");
         Assert.True(resp1.StatusCode == HttpStatusCode.OK);
         await resp1.Content.ReadAsStringAsync();
-        var end = DateTime.Now.Ticks;
+        var end = DateTime.UtcNow.Ticks;
 
         Assert.True(end - start > 1000000);
 
-        var start1 = DateTime.Now.Ticks;
+        var start1 = DateTime.UtcNow.Ticks;
         var resp2 = await _httpClient.GetAsync($"{baseUrl}?id=1");
         Assert.True(resp2.StatusCode == HttpStatusCode.OK);
         await resp2.Content.ReadAsStringAsync();
-        var end1 = DateTime.Now.Ticks;
+        var end1 = DateTime.UtcNow.Ticks;
 
         var result = end1 - start1;
         Assert.True(result < 400000);
@@ -125,12 +125,12 @@ public class MultiSourceApiRequestCacheTests : IClassFixture<WebApplicationFacto
 
         var result3 = await resp3.Content.ReadAsStringAsync();
 
-        var start = DateTime.Now.Ticks;
+        var start = DateTime.UtcNow.Ticks;
         var resp4 = await _httpClient.GetAsync($"{baseUrl}/users?page=1");
         Assert.True(resp4.StatusCode == HttpStatusCode.OK);
 
         var result4 = await resp4.Content.ReadAsStringAsync();
-        var end = DateTime.Now.Ticks;
+        var end = DateTime.UtcNow.Ticks;
 
         Assert.NotEqual(result1, result3);
         Assert.Equal(result3, result4);

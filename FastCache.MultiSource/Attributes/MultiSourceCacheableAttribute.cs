@@ -32,12 +32,12 @@ namespace FastCache.MultiSource.Attributes
                 .First(p => p.Name == "FromResult" && p.ContainsGenericParameters);
         }
 
-        public MultiSourceCacheableAttribute(string key, string expression, Target target, long expire = 0)
+        public MultiSourceCacheableAttribute(string key, string expression, Target target, long expireSeconds = 0)
         {
             _key = key;
             _expression = expression;
             _target = target;
-            _expire = expire;
+            _expire = expireSeconds;
             Order = 2;
         }
 
@@ -125,8 +125,8 @@ namespace FastCache.MultiSource.Attributes
             await cacheClient.Set(key, new CacheItem
             {
                 Value = value,
-                CreatedAt = DateTime.Now.Ticks,
-                Expire = _expire > 0 ? DateTime.Now.AddSeconds(_expire).Ticks : DateTime.Now.AddYears(1).Ticks,
+                CreatedAt = DateTime.UtcNow.Ticks,
+                Expire = _expire > 0 ? DateTime.UtcNow.AddSeconds(_expire).Ticks : DateTime.UtcNow.AddYears(1).Ticks,
                 AssemblyName = returnType.Assembly.GetName().FullName,
                 Type = returnType.FullName ?? string.Empty,
             }, _expire);
