@@ -39,8 +39,11 @@ namespace FastCache.InMemory.Drivers
                 ReleaseCached();
             }
 
-            cacheItem.Value = JsonConvert.SerializeObject(cacheItem.Value);
-            _dist.TryAdd(key, cacheItem);
+            if (cacheItem.Value != null)
+            {
+                cacheItem.Value = JsonConvert.SerializeObject(cacheItem.Value);
+            }
+            _dist.AddOrUpdate(key, cacheItem, (k, v) => cacheItem);
 
             return Task.CompletedTask;
         }
@@ -58,8 +61,15 @@ namespace FastCache.InMemory.Drivers
             ++cacheItem.Hits;
             var assembly = Assembly.Load(cacheItem.AssemblyName);
             var valueType = assembly.GetType(cacheItem.Type, true, true);
-            cacheItem.Value = JsonConvert.DeserializeObject(cacheItem.Value as string, valueType);
-            return Task.FromResult(cacheItem);
+            return Task.FromResult(new CacheItem()
+            {
+                CreatedAt = cacheItem.CreatedAt,
+                Value = JsonConvert.DeserializeObject(cacheItem.Value as string, valueType),
+                Expire = cacheItem.Expire,
+                Hits = cacheItem.Hits,
+                Type = cacheItem.Type,
+                AssemblyName = cacheItem.AssemblyName
+            });
         }
 
         public Task Delete(string key, string prefix = "")
