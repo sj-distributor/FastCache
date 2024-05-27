@@ -57,6 +57,8 @@ public class MemoryCacheTests
     {
         await _memoryCache.Set(key, new CacheItem()
         {
+            Type =value.GetType().FullName,
+            AssemblyName = value.GetType().Assembly.FullName,
             Value = value,
             Expire = DateTime.UtcNow.AddSeconds(20).Ticks
         });

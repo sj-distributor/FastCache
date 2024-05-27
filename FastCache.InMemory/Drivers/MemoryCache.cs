@@ -2,11 +2,13 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using FastCache.Core.Driver;
 using FastCache.Core.Entity;
 using FastCache.InMemory.Enum;
 using FastCache.InMemory.Extension;
+using Newtonsoft.Json;
 
 namespace FastCache.InMemory.Drivers
 {
@@ -36,7 +38,8 @@ namespace FastCache.InMemory.Drivers
             {
                 ReleaseCached();
             }
-            
+
+            cacheItem.Value = JsonConvert.SerializeObject(cacheItem.Value);
             _dist.TryAdd(key, cacheItem);
 
             return Task.CompletedTask;
@@ -51,9 +54,11 @@ namespace FastCache.InMemory.Drivers
                 Delete(key);
                 return Task.FromResult(new CacheItem());
             }
-
+            if (cacheItem?.AssemblyName == null || cacheItem?.Type == null) return Task.FromResult(new CacheItem());
             ++cacheItem.Hits;
-
+            var assembly = Assembly.Load(cacheItem.AssemblyName);
+            var valueType = assembly.GetType(cacheItem.Type, true, true);
+            cacheItem.Value = JsonConvert.DeserializeObject(cacheItem.Value as string, valueType);
             return Task.FromResult(cacheItem);
         }
 
