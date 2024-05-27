@@ -43,6 +43,7 @@ namespace FastCache.InMemory.Drivers
             {
                 cacheItem.Value = JsonConvert.SerializeObject(cacheItem.Value);
             }
+
             _dist.AddOrUpdate(key, cacheItem, (k, v) => cacheItem);
 
             return Task.CompletedTask;
@@ -57,14 +58,23 @@ namespace FastCache.InMemory.Drivers
                 Delete(key);
                 return Task.FromResult(new CacheItem());
             }
+
             if (cacheItem?.AssemblyName == null || cacheItem?.Type == null) return Task.FromResult(new CacheItem());
             ++cacheItem.Hits;
-            var assembly = Assembly.Load(cacheItem.AssemblyName);
-            var valueType = assembly.GetType(cacheItem.Type, true, true);
+            object? value = null;
+            if (!string.IsNullOrWhiteSpace(cacheItem.Type))
+            {
+                var assembly = Assembly.Load(cacheItem.AssemblyName);
+                var valueType = assembly.GetType(cacheItem.Type, true, true);
+                value = cacheItem.Value == null
+                    ? null
+                    : JsonConvert.DeserializeObject(cacheItem.Value as string, valueType);
+            }
+
             return Task.FromResult(new CacheItem()
             {
                 CreatedAt = cacheItem.CreatedAt,
-                Value = cacheItem.Value == null ? null : JsonConvert.DeserializeObject(cacheItem.Value as string, valueType),
+                Value = value,
                 Expire = cacheItem.Expire,
                 Hits = cacheItem.Hits,
                 Type = cacheItem.Type,
@@ -162,24 +172,24 @@ namespace FastCache.InMemory.Drivers
             {
                 ReleaseCached();
             }
-            
+
             _dist.TryAdd(key, cacheItem);
-        
+
             return Task.CompletedTask;
         }
 
-        public  Task<CacheItem> GetValue(string key)
+        public Task<CacheItem> GetValue(string key)
         {
             if (!_dist.TryGetValue(key, out var cacheItem)) return Task.FromResult(new CacheItem());
-        
+
             if (cacheItem.Expire < DateTime.UtcNow.Ticks)
             {
                 Delete(key);
                 return Task.FromResult(new CacheItem());
             }
-        
+
             ++cacheItem.Hits;
-        
+
             return Task.FromResult(cacheItem);
         }
     }
