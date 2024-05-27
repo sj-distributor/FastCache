@@ -154,5 +154,33 @@ namespace FastCache.InMemory.Drivers
         {
             return _dist;
         }
+
+        public Task SetValue(string key, CacheItem cacheItem, long _ = 0)
+        {
+            if (_dist.ContainsKey(key)) return Task.CompletedTask;
+            if (_dist.Count >= _maxCapacity)
+            {
+                ReleaseCached();
+            }
+            
+            _dist.TryAdd(key, cacheItem);
+        
+            return Task.CompletedTask;
+        }
+
+        public  Task<CacheItem> GetValue(string key)
+        {
+            if (!_dist.TryGetValue(key, out var cacheItem)) return Task.FromResult(new CacheItem());
+        
+            if (cacheItem.Expire < DateTime.UtcNow.Ticks)
+            {
+                Delete(key);
+                return Task.FromResult(new CacheItem());
+            }
+        
+            ++cacheItem.Hits;
+        
+            return Task.FromResult(cacheItem);
+        }
     }
 }
