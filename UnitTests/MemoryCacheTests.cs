@@ -69,6 +69,7 @@ public class MemoryCacheTests
     [Theory]
     [InlineData("anson2", "18", null)]
     [InlineData("anson22", "19", null)]
+    [InlineData("anson22", null, null)]
     public async void TestMemoryCacheCanDelete(string key, string value, string result)
     {
         await _memoryCache.Set(key, new CacheItem()

@@ -64,7 +64,7 @@ namespace FastCache.InMemory.Drivers
             return Task.FromResult(new CacheItem()
             {
                 CreatedAt = cacheItem.CreatedAt,
-                Value = JsonConvert.DeserializeObject(cacheItem.Value as string, valueType),
+                Value = cacheItem.Value == null ? null : JsonConvert.DeserializeObject(cacheItem.Value as string, valueType),
                 Expire = cacheItem.Expire,
                 Hits = cacheItem.Hits,
                 Type = cacheItem.Type,
