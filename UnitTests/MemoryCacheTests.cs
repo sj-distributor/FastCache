@@ -57,7 +57,7 @@ public class MemoryCacheTests
     {
         await _memoryCache.Set(key, new CacheItem()
         {
-            Type =value.GetType().FullName,
+            Type = value.GetType().FullName,
             AssemblyName = value.GetType().Assembly.FullName,
             Value = value,
             Expire = DateTime.UtcNow.AddSeconds(20).Ticks
@@ -79,6 +79,15 @@ public class MemoryCacheTests
         });
         await _memoryCache.Delete(key);
         var s = await _memoryCache.Get(key);
+        Assert.Equal(s.Value, result);
+
+        await _memoryCache.SetValue(key, new CacheItem()
+        {
+            Value = value,
+            Expire = DateTime.UtcNow.AddSeconds(20).Ticks
+        });
+        await _memoryCache.Delete(key);
+        s = await _memoryCache.GetValue(key);
         Assert.Equal(s.Value, result);
     }
 
@@ -203,7 +212,7 @@ public class MemoryCacheTests
         var s = await _memoryCache.Get(key);
         Assert.Equal(s.Value, result);
     }
-    
+
     [Theory]
     [InlineData("anson", "ansonExpire333", "*", "18", null)]
     [InlineData("anson", "ansonExpire444", "*", "19", null)]
@@ -228,9 +237,9 @@ public class MemoryCacheTests
             Value = value,
             Expire = DateTime.UtcNow.AddSeconds(20).Ticks
         });
-        
+
         await Task.Delay(TimeSpan.FromSeconds(4));
-        
+
         s = await _memoryCache.Get(key);
         Assert.Equal(s.Value, result);
     }

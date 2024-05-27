@@ -168,5 +168,16 @@ namespace FastCache.InMemory.Drivers
         {
             return BitConverter.ToUInt32(SHA256.Create().ComputeHash(Encoding.UTF8.GetBytes(key)), 0) % _buckets;
         }
+
+        public Task SetValue(string key, CacheItem cacheItem, long _ = 0)
+        {
+            Set(key, cacheItem);
+            return Task.CompletedTask;
+        }
+
+        public Task<CacheItem> GetValue(string key)
+        {
+            return Get(key);
+        }
     }
 }
