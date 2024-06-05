@@ -57,6 +57,8 @@ public class MultiBucketsMemoryCacheTests
     {
         await _memoryCache.Set(key, new CacheItem()
         {
+            Type = value.GetType().FullName,
+            AssemblyName = value.GetType().Assembly.FullName,
             Value = value,
             Expire = DateTime.UtcNow.AddSeconds(20).Ticks
         });
@@ -71,6 +73,8 @@ public class MultiBucketsMemoryCacheTests
     {
         await _memoryCache.Set(key, new CacheItem()
         {
+            Type = value.GetType().FullName,
+            AssemblyName = value.GetType().Assembly.FullName,
             Value = value,
             Expire = DateTime.UtcNow.AddSeconds(20).Ticks
         });
@@ -86,6 +90,8 @@ public class MultiBucketsMemoryCacheTests
     {
         await _memoryCache.Set(key, new CacheItem()
         {
+            Type = value.GetType().FullName,
+            AssemblyName = value.GetType().Assembly.FullName,
             Value = value,
             Expire = DateTime.UtcNow.AddSeconds(20).Ticks
         });
@@ -102,6 +108,8 @@ public class MultiBucketsMemoryCacheTests
         var fullKey = $"{prefix}:{key}";
         await _memoryCache.Set(fullKey, new CacheItem()
         {
+            Type = value.GetType().FullName,
+            AssemblyName = value.GetType().Assembly.FullName,
             Value = value,
             Expire = DateTime.UtcNow.AddSeconds(20).Ticks
         });
@@ -118,6 +126,8 @@ public class MultiBucketsMemoryCacheTests
     {
         await _memoryCache.Set(key, new CacheItem()
         {
+            Type = value.GetType().FullName,
+            AssemblyName = value.GetType().Assembly.FullName,
             Value = value,
             Expire = DateTime.UtcNow.AddSeconds(20).Ticks
         });
@@ -136,6 +146,8 @@ public class MultiBucketsMemoryCacheTests
         var fullKey = $"{prefix}:{key}";
         await _memoryCache.Set(fullKey, new CacheItem()
         {
+            Type = value.GetType().FullName,
+            AssemblyName = value.GetType().Assembly.FullName,
             Value = value,
             Expire = DateTime.UtcNow.AddSeconds(20).Ticks
         });
@@ -151,6 +163,8 @@ public class MultiBucketsMemoryCacheTests
     {
         await _memoryCache.Set(key, new CacheItem()
         {
+            Type = value.GetType().FullName,
+            AssemblyName = value.GetType().Assembly.FullName,
             Value = value,
             Expire = 1
         });

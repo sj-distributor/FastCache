@@ -167,13 +167,12 @@ namespace FastCache.InMemory.Drivers
 
         public Task SetValue(string key, CacheItem cacheItem, long _ = 0)
         {
-            if (_dist.ContainsKey(key)) return Task.CompletedTask;
             if (_dist.Count >= _maxCapacity)
             {
                 ReleaseCached();
             }
 
-            _dist.TryAdd(key, cacheItem);
+            _dist.AddOrUpdate(key, cacheItem, (k, v) => cacheItem);
 
             return Task.CompletedTask;
         }
