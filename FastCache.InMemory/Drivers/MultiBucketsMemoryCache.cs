@@ -50,7 +50,7 @@ namespace FastCache.InMemory.Drivers
             {
                 ReleaseCached(bucket);
             }
-            
+
             if (cacheItem.Value != null)
             {
                 cacheItem.Value = JsonConvert.SerializeObject(cacheItem.Value);
@@ -71,7 +71,7 @@ namespace FastCache.InMemory.Drivers
                 Delete(key);
                 return Task.FromResult(new CacheItem());
             }
-            
+
             if (cacheItem?.AssemblyName == null || cacheItem?.Type == null) return Task.FromResult(new CacheItem());
             ++cacheItem.Hits;
             object? value = null;
@@ -131,6 +131,19 @@ namespace FastCache.InMemory.Drivers
         {
             GetBucket(HashKey(key)).TryRemove(key, out _, _delaySeconds);
             return Task.CompletedTask;
+        }
+
+        public Task<bool> SetAsyncLock(string key, CacheItem cacheItem, long expire = 0, int msTimeout = 100,
+            int msExpire = 1000,
+            bool throwOnFailure = false)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<bool> DeleteAsyncLock(string key, string prefix = "", int msTimeout = 100, int msExpire = 1000,
+            bool throwOnFailure = false)
+        {
+            throw new NotImplementedException();
         }
 
         private void InitBucket(Dictionary<uint, ConcurrentDictionary<string, CacheItem>> map, uint buckets)

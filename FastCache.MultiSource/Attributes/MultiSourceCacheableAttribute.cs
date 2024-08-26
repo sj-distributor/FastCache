@@ -20,10 +20,14 @@ namespace FastCache.MultiSource.Attributes
         private readonly Target _target;
         private readonly long _expire;
         public sealed override int Order { get; set; }
-        
+
+        private readonly int _msTimeout;
+        private readonly int _msExpire;
+        private readonly bool _throwOnFailure;
+
         private static readonly ConcurrentDictionary<Type, MethodInfo>
             TypeofTaskResultMethod = new ConcurrentDictionary<Type, MethodInfo>();
-        
+
         private static readonly MethodInfo TaskResultMethod;
 
         static MultiSourceCacheableAttribute()
@@ -32,13 +36,19 @@ namespace FastCache.MultiSource.Attributes
                 .First(p => p.Name == "FromResult" && p.ContainsGenericParameters);
         }
 
-        public MultiSourceCacheableAttribute(string key, string expression, Target target, long expireSeconds = 0)
+        public MultiSourceCacheableAttribute(string key, string expression, Target target, long expireSeconds = 0,
+            int msTimeout = 100, int msExpire = 1000,
+            bool throwOnFailure = false)
         {
             _key = key;
             _expression = expression;
             _target = target;
             _expire = expireSeconds;
             Order = 2;
+
+            _msTimeout = msTimeout;
+            _msExpire = msExpire;
+            _throwOnFailure = throwOnFailure;
         }
 
         public override async Task Invoke(AspectContext context, AspectDelegate next)
@@ -99,10 +109,12 @@ namespace FastCache.MultiSource.Attributes
                         ? context.ServiceMethod.ReturnType.GetGenericArguments().First()
                         : context.ServiceMethod.ReturnType;
 
-                    context.ReturnValue =  context.IsAsync() ? TypeofTaskResultMethod.GetOrAdd(returnTypeBefore,
-                            t => TaskResultMethod.MakeGenericMethod(returnTypeBefore))
-                        .Invoke(null, new [] { cacheValue.Value }) : cacheValue.Value;
-                        
+                    context.ReturnValue = context.IsAsync()
+                        ? TypeofTaskResultMethod.GetOrAdd(returnTypeBefore,
+                                t => TaskResultMethod.MakeGenericMethod(returnTypeBefore))
+                            .Invoke(null, new[] { cacheValue.Value })
+                        : cacheValue.Value;
+
                     return;
                 }
             }
@@ -122,14 +134,30 @@ namespace FastCache.MultiSource.Attributes
 
             var returnType = value.GetType();
 
-            await cacheClient.Set(key, new CacheItem
+            if (_target == Target.Redis)
             {
-                Value = value,
-                CreatedAt = DateTime.UtcNow.Ticks,
-                Expire = _expire > 0 ? DateTime.UtcNow.AddSeconds(_expire).Ticks : DateTime.UtcNow.AddYears(1).Ticks,
-                AssemblyName = returnType.Assembly.GetName().FullName,
-                Type = returnType.FullName ?? string.Empty,
-            }, _expire);
+                await cacheClient.SetAsyncLock(key, new CacheItem
+                {
+                    Value = value,
+                    CreatedAt = DateTime.UtcNow.Ticks,
+                    Expire =
+                        _expire > 0 ? DateTime.UtcNow.AddSeconds(_expire).Ticks : DateTime.UtcNow.AddYears(1).Ticks,
+                    AssemblyName = returnType.Assembly.GetName().FullName,
+                    Type = returnType.FullName ?? string.Empty,
+                }, _expire, _msTimeout, _msExpire, _throwOnFailure);
+            }
+            else
+            {
+                await cacheClient.Set(key, new CacheItem
+                {
+                    Value = value,
+                    CreatedAt = DateTime.UtcNow.Ticks,
+                    Expire =
+                        _expire > 0 ? DateTime.UtcNow.AddSeconds(_expire).Ticks : DateTime.UtcNow.AddYears(1).Ticks,
+                    AssemblyName = returnType.Assembly.GetName().FullName,
+                    Type = returnType.FullName ?? string.Empty,
+                }, _expire);
+            }
         }
     }
 }
