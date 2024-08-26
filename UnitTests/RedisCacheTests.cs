@@ -7,13 +7,12 @@ using System.Threading.Tasks;
 using FastCache.Core.Entity;
 using FastCache.Redis.Constant;
 using FastCache.Redis.Driver;
-using NewLife.Log;
 using Xunit;
 using Xunit.Abstractions;
 
 namespace UnitTests;
 
-public class RedisCacheTests
+public partial class RedisCacheTests
 {
     private readonly ITestOutputHelper _testOutputHelper;
 
@@ -278,16 +277,26 @@ public class RedisCacheTests
     /// <param name="prefix"></param>
     /// <param name="key"></param>
     /// <param name="value"></param>
+    /// <param name="msExpire"></param>
     /// <param name="delayMs"></param>
     /// <param name="expect"></param>
+    /// <param name="msTimeout"></param>
     [Theory]
-    [InlineData("Joe", "1111Joe", "88888888888888888888888888888888888888888888888888888888888888888", 100, 5)]
-    [InlineData("Joe", "1111Joe", "88888888888888888888888888888888888888888888888888888888888888888", 200, 4)]
-    [InlineData("Joe", "1111Joe", "88888888888888888888888888888888888888888888888888888888888888888", 300, 3)]
-    [InlineData("Joe", "1111Joe", "88888888888888888888888888888888888888888888888888888888888888888", 700, 2)]
-    [InlineData("Joe", "1111Joe", "88888888888888888888888888888888888888888888888888888888888888888", 900, 1)]
+    [InlineData("Joe", "1111Joe", "88888888888888888888888888888888888888888888888888888888888888888", 100, 1000, 0,
+        10)]
+    [InlineData("Joe", "1111Joe", "88888888888888888888888888888888888888888888888888888888888888888", 100, 1000, 100,
+        5)]
+    [InlineData("Joe", "1111Joe", "88888888888888888888888888888888888888888888888888888888888888888", 100, 1000, 200,
+        4)]
+    [InlineData("Joe", "1111Joe", "88888888888888888888888888888888888888888888888888888888888888888", 100, 1000, 300,
+        3)]
+    [InlineData("Joe", "1111Joe", "88888888888888888888888888888888888888888888888888888888888888888", 100, 1000, 700,
+        2)]
+    [InlineData("Joe", "1111Joe", "88888888888888888888888888888888888888888888888888888888888888888", 100, 1000, 900,
+        1)]
     public async void TestLockRedisCacheAddWithVaryingDelaysAndLinearTimeoutHandling(string prefix, string key,
         string value,
+        int msTimeout, int msExpire,
         int delayMs, int expect)
     {
         var fullKey = $"{prefix}:{key}";
@@ -311,7 +320,7 @@ public class RedisCacheTests
                         AssemblyName = value.GetType().Assembly.GetName().Name,
                         Type = value.GetType().FullName
                     });
-                });
+                }, msTimeout, msExpire);
 
             stopwatch.Stop();
 
@@ -358,16 +367,19 @@ public class RedisCacheTests
     /// <param name="deleteKey"></param>
     /// <param name="value"></param>
     /// <param name="result"></param>
+    /// <param name="msExpire"></param>
     /// <param name="delayMs"></param>
     /// <param name="hasLockCount"></param>
+    /// <param name="msTimeout"></param>
     [Theory]
-    [InlineData("Joe", "1111Joe", "*", "18", null, 100, 5)]
-    [InlineData("Joe", "1111Joe", "*", "18", null, 200, 4)]
-    [InlineData("Joe", "1111Joe", "*", "18", null, 300, 3)]
-    [InlineData("Joe", "1111Joe", "*", "18", null, 700, 2)]
-    [InlineData("Joe", "1111Joe", "*", "18", null, 900, 1)]
+    [InlineData("Joe", "1111Joe", "*", "18", null, 100, 1000, 0, 10)]
+    [InlineData("Joe", "1111Joe", "*", "18", null, 100, 1000, 100, 5)]
+    [InlineData("Joe", "1111Joe", "*", "18", null, 100, 1000, 200, 4)]
+    [InlineData("Joe", "1111Joe", "*", "18", null, 100, 1000, 300, 3)]
+    [InlineData("Joe", "1111Joe", "*", "18", null, 100, 1000, 700, 2)]
+    [InlineData("Joe", "1111Joe", "*", "18", null, 100, 1000, 900, 1)]
     public async void TestLockRedisCacheDeleteWithVaryingDelaysAndLinearTimeoutHandling(string prefix, string key,
-        string deleteKey, string value, string? result, int delayMs, int hasLockCount)
+        string deleteKey, string value, string? result, int msTimeout, int msExpire, int delayMs, int hasLockCount)
     {
         var fullKey = $"{prefix}:{key}";
 
@@ -392,7 +404,7 @@ public class RedisCacheTests
                 {
                     await Task.Delay(delayMs);
                     await _redisClient.Delete(deleteKey, prefix);
-                });
+                }, msTimeout, msExpire);
 
             stopwatch.Stop();
 
@@ -431,6 +443,254 @@ public class RedisCacheTests
 
         var s = await _redisClient.Get(key);
         Assert.Equal(s.Value, result);
+    }
+
+    /// <summary>
+    /// 测试 Redis 缓存添加方法在不同延迟和线性请求超时情况下的分布式锁自动释放以及抢锁情况。
+    /// </summary>
+    /// <param name="prefix"></param>
+    /// <param name="key"></param>
+    /// <param name="value"></param>
+    /// <param name="msTimeout"></param>
+    /// <param name="msExpire"></param>
+    /// <param name="delayMs"></param>
+    /// <param name="expect"></param>
+    [Theory]
+    [InlineData("Joe", "1111Joe", "88888888888888888888888888888888888888888888888888888888888888888", 100, 200, 200,
+        1)]
+    [InlineData("Joe", "1111Joe", "88888888888888888888888888888888888888888888888888888888888888888", 400, 200, 200,
+        2)]
+    public async void TestLockAutoEvictByAdd(string prefix, string key,
+        string value,
+        int msTimeout, int msExpire,
+        int delayMs, int expect)
+    {
+        var fullKey = $"{prefix}:{key}";
+
+        var client = _redisClient.GetRedisClient()!;
+
+        var lockResult = new ConcurrentDictionary<string, bool>();
+
+        // 定义一个异步操作，用于模拟不同客户端争抢锁
+        async Task<bool> TrySetAsyncLock(string v)
+        {
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+            var isLock = await _redisClient.ExecuteWithRedisLockAsync(client,
+                $"{Prefix.DeletePrefix}:{fullKey}", async () =>
+                {
+                    await Task.Delay(delayMs);
+                    await _redisClient.Set(fullKey, new CacheItem()
+                    {
+                        Value = $"{value}-{v}",
+                        AssemblyName = value.GetType().Assembly.GetName().Name,
+                        Type = value.GetType().FullName
+                    });
+                }, msTimeout, msExpire);
+
+            stopwatch.Stop();
+
+            _testOutputHelper.WriteLine(
+                $"{v} - time : {stopwatch.ElapsedMilliseconds} lock: {isLock}, ticks: {DateTime.UtcNow.Ticks}");
+
+            lockResult.TryAdd(v, isLock);
+
+            return isLock;
+        }
+
+        var tasks = new List<Task>();
+
+        // 创建多个并发任务，模拟多个客户端同时争抢锁
+        for (int i = 0; i < 2; i++)
+        {
+            var localIndex = i;
+            tasks.Add(TrySetAsyncLock(localIndex.ToString()));
+        }
+
+        // 等待所有任务完成
+        await Task.WhenAll(tasks);
+
+        await _redisClient.DeleteAsyncLock("*", prefix);
+
+        var hasLockRequests = lockResult.Count(x => x.Value);
+
+        _testOutputHelper.WriteLine(
+            $"hasLockRequests: {hasLockRequests} | delayMs: {delayMs}");
+
+        Assert.True(hasLockRequests == expect);
+    }
+
+    /// <summary>
+    /// 测试 Redis 缓存删除方法在不同延迟和线性请求超时情况下的分布式锁自动释放以及抢锁情况。
+    /// </summary>
+    /// <param name="prefix"></param>
+    /// <param name="key"></param>
+    /// <param name="deleteKey"></param>
+    /// <param name="value"></param>
+    /// <param name="result"></param>
+    /// <param name="msTimeout"></param>
+    /// <param name="msExpire"></param>
+    /// <param name="delayMs"></param>
+    /// <param name="hasLockCount"></param>
+    [Theory]
+    // 抢锁失败的情况
+    [InlineData("Joe", "1111Joe", "*", "18", null, 100, 200, 200, 1)]
+    // 锁超时被抢
+    [InlineData("Joe", "1111Joe", "*", "18", null, 400, 200, 200, 2)]
+    public async void TestLockAutoEvictByDelete(string prefix, string key,
+        string deleteKey, string value, string? result, int msTimeout, int msExpire, int delayMs, int hasLockCount)
+    {
+        var fullKey = $"{prefix}:{key}";
+
+        var client = _redisClient.GetRedisClient()!;
+
+        await _redisClient.SetAsyncLock(fullKey, new CacheItem()
+        {
+            Value = value,
+            AssemblyName = value.GetType().Assembly.GetName().Name,
+            Type = value.GetType().FullName
+        });
+
+        var lockResult = new ConcurrentDictionary<string, bool>();
+
+        // 定义一个异步操作，用于模拟不同客户端争抢锁
+        async Task<bool> TrySetAsyncLock(string v)
+        {
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+            var isLock = await _redisClient.ExecuteWithRedisLockAsync(client,
+                $"{Prefix.DeletePrefix}:{fullKey}", async () =>
+                {
+                    await Task.Delay(delayMs);
+                    await _redisClient.Delete(deleteKey, prefix);
+                }, msTimeout, msExpire);
+
+            stopwatch.Stop();
+
+            _testOutputHelper.WriteLine(
+                $"{v} - time : {stopwatch.ElapsedMilliseconds} lock: {isLock}, ticks: {DateTime.UtcNow.Ticks}");
+
+            lockResult.TryAdd(v, isLock);
+
+            return isLock;
+        }
+
+        var tasks = new List<Task>();
+
+        // 创建多个并发任务，模拟多个客户端同时争抢锁
+        for (int i = 0; i < 2; i++)
+        {
+            var localIndex = i;
+            tasks.Add(TrySetAsyncLock(localIndex.ToString()));
+        }
+
+        // 等待所有任务完成
+        await Task.WhenAll(tasks);
+
+        await _redisClient.DeleteAsyncLock("*", prefix);
+
+        var hasLockRequests = lockResult.Count(x => x.Value);
+
+        _testOutputHelper.WriteLine(
+            $"hasLockRequests: {hasLockRequests} | delayMs: {delayMs}");
+
+        Assert.True(hasLockRequests == hasLockCount);
+
+        var s = await _redisClient.Get(key);
+        Assert.Equal(s.Value, result);
+    }
+
+    [Theory]
+    [InlineData("Joe", "1111Joe", "*", "18", null, 100, 1000, 100, 1000, 0.5)] // 模拟1000个请求并发
+    [InlineData("Joe", "1111Joe", "*", "18", null, 100, 1000, 100, 2000, 0.5)] // 模拟2000个请求并发
+    [InlineData("Joe", "1111Joe", "*", "18", null, 100, 1000, 700, 1000, 0.1)] // 模拟1000个请求并发
+    [InlineData("Joe", "1111Joe", "*", "18", null, 100, 1000, 300, 1000, 0.3)] // 模拟1000个请求并发
+    public async void PerformanceTestLockRedisCacheUnderHighConcurrency(
+        string prefix, string key, string deleteKey, string value, string? result,
+        int msTimeout, int msExpire, int delayMs, int numberOfRequests, decimal expectedSuccessRate)
+    {
+        var fullKey = $"{prefix}:{key}";
+
+        var client = _redisClient.GetRedisClient()!;
+
+        // 初始化缓存数据
+        await _redisClient.SetAsyncLock(fullKey, new CacheItem()
+        {
+            Value = value,
+            AssemblyName = value.GetType().Assembly.GetName().Name,
+            Type = value.GetType().FullName
+        });
+
+        var lockResult = new ConcurrentDictionary<string, bool>();
+        var responseTimes = new ConcurrentBag<long>(); // 存储每个请求的响应时间
+
+        // 定义一个异步操作，用于模拟不同客户端争抢锁
+        async Task<bool> TrySetAsyncLock(string v)
+        {
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+
+            var isLock = await _redisClient.ExecuteWithRedisLockAsync(client,
+                $"{Prefix.DeletePrefix}:{fullKey}", async () =>
+                {
+                    await Task.Delay(delayMs); // 模拟主体操作前的延迟
+                    await _redisClient.Delete(deleteKey, prefix);
+                }, msTimeout, msExpire);
+
+            stopwatch.Stop();
+
+            // _testOutputHelper.WriteLine(
+            //     $"{v} - time : {stopwatch.ElapsedMilliseconds}ms lock: {isLock}, ticks: {DateTime.UtcNow.Ticks}");
+
+            lockResult.TryAdd(v, isLock);
+            responseTimes.Add(stopwatch.ElapsedMilliseconds); // 记录响应时间
+
+            return isLock;
+        }
+
+        var tasks = new List<Task>();
+
+        // 创建高并发任务，模拟多个客户端同时争抢锁
+        for (int i = 0; i < numberOfRequests; i++)
+        {
+            var localIndex = i;
+            tasks.Add(TrySetAsyncLock(localIndex.ToString()));
+        }
+
+        // 等待所有任务完成
+        await Task.WhenAll(tasks);
+
+        // 删除缓存
+        await _redisClient.DeleteAsyncLock("*", prefix);
+
+        Assert.True(lockResult.Count == numberOfRequests);
+
+        var hasLockRequests = lockResult.Count(x => x.Value);
+
+        _testOutputHelper.WriteLine($"hasLockRequests: {hasLockRequests} | delayMs: {delayMs}");
+
+        // 验证最后缓存项的值
+        var s = await _redisClient.Get(key);
+        Assert.Equal(s.Value, result);
+
+        // 性能分析: 计算平均响应时间
+        var averageResponseTime = responseTimes.Average();
+        var maxResponseTime = responseTimes.Max();
+        var minResponseTime = responseTimes.Min();
+        
+        var expectedSuccessCount = (int)(numberOfRequests * expectedSuccessRate);
+
+        // 打印性能测试结果
+        _testOutputHelper.WriteLine($"Performance Test Results:");
+        _testOutputHelper.WriteLine($"Total Requests: {numberOfRequests}");
+        _testOutputHelper.WriteLine($"Locks Acquired: {hasLockRequests}");
+        _testOutputHelper.WriteLine($"Average Response Time: {averageResponseTime}ms");
+        _testOutputHelper.WriteLine($"Max Response Time: {maxResponseTime}ms");
+        _testOutputHelper.WriteLine($"Min Response Time: {minResponseTime}ms");
+        _testOutputHelper.WriteLine($"Expected Success Count: {expectedSuccessCount} | rate: {expectedSuccessRate}");
+
+        // 对于高并发，确保大部分锁能在规定时间内被获取
+        Assert.True(hasLockRequests >= expectedSuccessCount);
     }
 
 
