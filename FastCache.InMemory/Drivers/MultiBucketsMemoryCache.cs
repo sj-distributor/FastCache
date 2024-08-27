@@ -133,19 +133,6 @@ namespace FastCache.InMemory.Drivers
             return Task.CompletedTask;
         }
 
-        public Task<bool> SetAsyncLock(string key, CacheItem cacheItem, long expire = 0, int msTimeout = 100,
-            int msExpire = 1000,
-            bool throwOnFailure = false)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<bool> DeleteAsyncLock(string key, string prefix = "", int msTimeout = 100, int msExpire = 1000,
-            bool throwOnFailure = false)
-        {
-            throw new NotImplementedException();
-        }
-
         private void InitBucket(Dictionary<uint, ConcurrentDictionary<string, CacheItem>> map, uint buckets)
         {
             for (uint i = 0; i < buckets; i++)

@@ -6,7 +6,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using FastCache.Core.Entity;
-using FastCache.Redis.Constant;
 using FastCache.Redis.Driver;
 using Xunit;
 using Xunit.Abstractions;
@@ -252,13 +251,13 @@ public partial class RedisCacheTests(ITestOutputHelper testOutputHelper)
         string deleteKey, string value, string? result)
     {
         var fullKey = $"{prefix}:{key}";
-        await _redisClient.SetAsyncLock(fullKey, new CacheItem()
+        await _redisClient.Set(fullKey, new CacheItem()
         {
             Value = value,
             AssemblyName = value.GetType().Assembly.GetName().Name,
             Type = value.GetType().FullName
         });
-        await _redisClient.DeleteAsyncLock(deleteKey, prefix);
+        await _redisClient.Delete(deleteKey, prefix);
         var s = await _redisClient.Get(key);
         Assert.Equal(s.Value, result);
     }
@@ -295,8 +294,6 @@ public partial class RedisCacheTests(ITestOutputHelper testOutputHelper)
     {
         var fullKey = $"{prefix}:{key}";
 
-        var client = _redisClient.GetRedisClient()!;
-
         var lockResult = new ConcurrentDictionary<string, bool>();
 
         // 定义一个异步操作，用于模拟不同客户端争抢锁
@@ -304,8 +301,8 @@ public partial class RedisCacheTests(ITestOutputHelper testOutputHelper)
         {
             var stopwatch = new Stopwatch();
             stopwatch.Start();
-            var isLock = await _redisClient.ExecuteWithRedisLockAsync(client,
-                $"{Prefix.DeletePrefix}:{fullKey}", async () =>
+            var isLock = await _redisClient.ExecuteWithRedisLockAsync(
+                $"lock:delete:{fullKey}", async () =>
                 {
                     await Task.Delay(delayMs);
                     await _redisClient.Set(fullKey, new CacheItem()
@@ -338,7 +335,7 @@ public partial class RedisCacheTests(ITestOutputHelper testOutputHelper)
         // 等待所有任务完成
         await Task.WhenAll(tasks);
 
-        await _redisClient.DeleteAsyncLock("*", prefix);
+        await _redisClient.Delete("*", prefix);
 
         Assert.True(lockResult.Count == 10);
 
@@ -377,9 +374,7 @@ public partial class RedisCacheTests(ITestOutputHelper testOutputHelper)
     {
         var fullKey = $"{prefix}:{key}";
 
-        var client = _redisClient.GetRedisClient()!;
-
-        await _redisClient.SetAsyncLock(fullKey, new CacheItem()
+        await _redisClient.Set(fullKey, new CacheItem()
         {
             Value = value,
             AssemblyName = value.GetType().Assembly.GetName().Name,
@@ -393,8 +388,8 @@ public partial class RedisCacheTests(ITestOutputHelper testOutputHelper)
         {
             var stopwatch = new Stopwatch();
             stopwatch.Start();
-            var isLock = await _redisClient.ExecuteWithRedisLockAsync(client,
-                $"{Prefix.DeletePrefix}:{fullKey}", async () =>
+            var isLock = await _redisClient.ExecuteWithRedisLockAsync(
+                $"lock:delete:{fullKey}", async () =>
                 {
                     await Task.Delay(delayMs);
                     await _redisClient.Delete(deleteKey, prefix);
@@ -422,7 +417,7 @@ public partial class RedisCacheTests(ITestOutputHelper testOutputHelper)
         // 等待所有任务完成
         await Task.WhenAll(tasks);
 
-        await _redisClient.DeleteAsyncLock("*", prefix);
+        await _redisClient.Delete("*", prefix);
 
         Assert.True(lockResult.Count == 10);
 
@@ -461,8 +456,6 @@ public partial class RedisCacheTests(ITestOutputHelper testOutputHelper)
     {
         var fullKey = $"{prefix}:{key}";
 
-        var client = _redisClient.GetRedisClient()!;
-
         var lockResult = new ConcurrentDictionary<string, bool>();
 
         // 定义一个异步操作，用于模拟不同客户端争抢锁
@@ -470,8 +463,8 @@ public partial class RedisCacheTests(ITestOutputHelper testOutputHelper)
         {
             var stopwatch = new Stopwatch();
             stopwatch.Start();
-            var isLock = await _redisClient.ExecuteWithRedisLockAsync(client,
-                $"{Prefix.DeletePrefix}:{fullKey}", async () =>
+            var isLock = await _redisClient.ExecuteWithRedisLockAsync(
+                $"lock:delete:{fullKey}", async () =>
                 {
                     await Task.Delay(delayMs);
                     await _redisClient.Set(fullKey, new CacheItem()
@@ -504,7 +497,7 @@ public partial class RedisCacheTests(ITestOutputHelper testOutputHelper)
         // 等待所有任务完成
         await Task.WhenAll(tasks);
 
-        await _redisClient.DeleteAsyncLock("*", prefix);
+        await _redisClient.Delete("*", prefix);
 
         var hasLockRequests = lockResult.Count(x => x.Value);
 
@@ -536,9 +529,7 @@ public partial class RedisCacheTests(ITestOutputHelper testOutputHelper)
     {
         var fullKey = $"{prefix}:{key}";
 
-        var client = _redisClient.GetRedisClient()!;
-
-        await _redisClient.SetAsyncLock(fullKey, new CacheItem()
+        await _redisClient.Set(fullKey, new CacheItem()
         {
             Value = value,
             AssemblyName = value.GetType().Assembly.GetName().Name,
@@ -552,8 +543,8 @@ public partial class RedisCacheTests(ITestOutputHelper testOutputHelper)
         {
             var stopwatch = new Stopwatch();
             stopwatch.Start();
-            var isLock = await _redisClient.ExecuteWithRedisLockAsync(client,
-                $"{Prefix.DeletePrefix}:{fullKey}", async () =>
+            var isLock = await _redisClient.ExecuteWithRedisLockAsync(
+                $"lock:delete:{fullKey}", async () =>
                 {
                     await Task.Delay(delayMs);
                     await _redisClient.Delete(deleteKey, prefix);
@@ -581,7 +572,7 @@ public partial class RedisCacheTests(ITestOutputHelper testOutputHelper)
         // 等待所有任务完成
         await Task.WhenAll(tasks);
 
-        await _redisClient.DeleteAsyncLock("*", prefix);
+        await _redisClient.Delete("*", prefix);
 
         var hasLockRequests = lockResult.Count(x => x.Value);
 
@@ -605,10 +596,8 @@ public partial class RedisCacheTests(ITestOutputHelper testOutputHelper)
     {
         var fullKey = $"{prefix}:{key}";
 
-        var client = _redisClient.GetRedisClient()!;
-
         // 初始化缓存数据
-        await _redisClient.SetAsyncLock(fullKey, new CacheItem()
+        await _redisClient.Set(fullKey, new CacheItem()
         {
             Value = value,
             AssemblyName = value.GetType().Assembly.GetName().Name,
@@ -624,8 +613,8 @@ public partial class RedisCacheTests(ITestOutputHelper testOutputHelper)
             var stopwatch = new Stopwatch();
             stopwatch.Start();
 
-            var isLock = await _redisClient.ExecuteWithRedisLockAsync(client,
-                $"{Prefix.DeletePrefix}:{fullKey}", async () =>
+            var isLock = await _redisClient.ExecuteWithRedisLockAsync(
+                $"lock:delete:{fullKey}", async () =>
                 {
                     await Task.Delay(delayMs); // 模拟主体操作前的延迟
                     await _redisClient.Delete(deleteKey, prefix);
@@ -655,7 +644,7 @@ public partial class RedisCacheTests(ITestOutputHelper testOutputHelper)
         await Task.WhenAll(tasks);
 
         // 删除缓存
-        await _redisClient.DeleteAsyncLock("*", prefix);
+        await _redisClient.Delete("*", prefix);
 
         Assert.True(lockResult.Count == numberOfRequests);
 
@@ -717,11 +706,10 @@ public partial class RedisCacheTests(ITestOutputHelper testOutputHelper)
         int msTimeout, int msExpire, int delayMs, int numberOfRequests, decimal expectedSuccessRate)
     {
         var fullKey = $"{prefix}:{key}";
-        var client = _redisClient.GetRedisClient()!;
         var lockResult = new ConcurrentDictionary<string, bool>();
 
         // 初始化缓存数据
-        await _redisClient.SetAsyncLock(fullKey, new CacheItem()
+        await _redisClient.Set(fullKey, new CacheItem()
         {
             Value = value,
             AssemblyName = value.GetType().Assembly.GetName().Name,
@@ -745,8 +733,8 @@ public partial class RedisCacheTests(ITestOutputHelper testOutputHelper)
                 var stopwatch = Stopwatch.StartNew();
 
                 // 执行带锁操作
-                var isLock = await _redisClient.ExecuteWithRedisLockAsync(client,
-                    $"{Prefix.DeletePrefix}:{fullKey}", async () =>
+                var isLock = await _redisClient.ExecuteWithRedisLockAsync(
+                    $"lock:delete:{fullKey}", async () =>
                     {
                         await Task.Delay(delayMs); // 模拟处理延迟
 
@@ -802,7 +790,7 @@ public partial class RedisCacheTests(ITestOutputHelper testOutputHelper)
         Assert.True(tasks.Count > 0);
 
         // 删除缓存
-        await _redisClient.DeleteAsyncLock("*", prefix);
+        await _redisClient.Delete("*", prefix);
 
         Assert.True(lockResult.Count == numberOfRequests);
 
@@ -858,11 +846,10 @@ public partial class RedisCacheTests(ITestOutputHelper testOutputHelper)
         int msTimeout, int msExpire, int delayMs, int numberOfRequests, decimal expectedSuccessRate)
     {
         var fullKey = $"{prefix}:{key}";
-        var client = _redisClient.GetRedisClient()!;
         var lockResult = new ConcurrentDictionary<string, bool>();
 
         // 初始化缓存数据
-        await _redisClient.SetAsyncLock(fullKey, new CacheItem()
+        await _redisClient.Set(fullKey, new CacheItem()
         {
             Value = value,
             AssemblyName = value.GetType().Assembly.GetName().Name,
@@ -886,8 +873,8 @@ public partial class RedisCacheTests(ITestOutputHelper testOutputHelper)
                 var stopwatch = Stopwatch.StartNew();
 
                 // 执行带锁操作
-                var isLock = await _redisClient.ExecuteWithRedisLockAsync(client,
-                    $"{Prefix.DeletePrefix}:{fullKey}", async () =>
+                var isLock = await _redisClient.ExecuteWithRedisLockAsync(
+                    $"lock:delete:{fullKey}", async () =>
                     {
                         await Task.Delay(delayMs); // 模拟处理延迟
 
@@ -943,7 +930,7 @@ public partial class RedisCacheTests(ITestOutputHelper testOutputHelper)
         await Task.WhenAll(tasks);
 
         // 删除缓存
-        await _redisClient.DeleteAsyncLock("*", prefix);
+        await _redisClient.Delete("*", prefix);
 
         testOutputHelper.WriteLine($"lockResult count: {lockResult.Count}");
 
@@ -989,11 +976,10 @@ public partial class RedisCacheTests(ITestOutputHelper testOutputHelper)
         decimal expectedSuccessRate)
     {
         var fullKey = $"{prefix}:{key}";
-        var client = _redisClient.GetRedisClient()!;
         var lockResult = new ConcurrentDictionary<string, bool>();
 
         // 初始化缓存数据
-        await _redisClient.SetAsyncLock(fullKey, new CacheItem()
+        await _redisClient.Set(fullKey, new CacheItem()
         {
             Value = value,
             AssemblyName = value.GetType().Assembly.GetName().Name,
@@ -1019,8 +1005,8 @@ public partial class RedisCacheTests(ITestOutputHelper testOutputHelper)
                     var stopwatch = Stopwatch.StartNew();
 
                     // 执行带锁操作
-                    var isLock = await _redisClient.ExecuteWithRedisLockAsync(client,
-                        $"{Prefix.DeletePrefix}:{fullKey}", async () =>
+                    var isLock = await _redisClient.ExecuteWithRedisLockAsync(
+                        $"lock:delete:{fullKey}", async () =>
                         {
                             await Task.Delay(delayMs); // 模拟处理延迟
 
@@ -1073,7 +1059,7 @@ public partial class RedisCacheTests(ITestOutputHelper testOutputHelper)
         await Task.WhenAll(tasks);
 
         // 删除缓存
-        await _redisClient.DeleteAsyncLock("*", prefix);
+        await _redisClient.Delete("*", prefix);
 
         testOutputHelper.WriteLine($"lockResult count: {lockResult.Count}");
 
@@ -1124,11 +1110,10 @@ public partial class RedisCacheTests(ITestOutputHelper testOutputHelper)
         decimal expectedSuccessRate)
     {
         var fullKey = $"{prefix}:{key}";
-        var client = _redisClient.GetRedisClient()!;
         var lockResult = new ConcurrentDictionary<string, bool>();
 
         // 初始化缓存数据
-        await _redisClient.SetAsyncLock(fullKey, new CacheItem()
+        await _redisClient.Set(fullKey, new CacheItem()
         {
             Value = value,
             AssemblyName = value.GetType().Assembly.GetName().Name,
@@ -1154,8 +1139,8 @@ public partial class RedisCacheTests(ITestOutputHelper testOutputHelper)
                     var stopwatch = Stopwatch.StartNew();
 
                     // 执行带锁操作
-                    var isLock = await _redisClient.ExecuteWithRedisLockAsync(client,
-                        $"{Prefix.DeletePrefix}:{fullKey}", async () =>
+                    var isLock = await _redisClient.ExecuteWithRedisLockAsync(
+                        $"lock:delete:{fullKey}", async () =>
                         {
                             await Task.Delay(delayMs); // 模拟处理延迟
 
@@ -1210,7 +1195,7 @@ public partial class RedisCacheTests(ITestOutputHelper testOutputHelper)
         await Task.WhenAll(tasks);
 
         // 删除缓存
-        await _redisClient.DeleteAsyncLock("*", prefix);
+        await _redisClient.Delete("*", prefix);
 
         var totalRequests = numberOfThreads * requestsPerThread;
         Assert.True(lockResult.Count == totalRequests);

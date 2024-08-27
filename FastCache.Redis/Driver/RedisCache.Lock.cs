@@ -9,7 +9,6 @@ namespace FastCache.Redis.Driver
         /// <summary>
         /// 使用 Redis 分布式锁来执行操作，包含重试机制（指数退避）
         /// </summary>
-        /// <param name="redis">Redis 客户端实例</param>
         /// <param name="lockKey">锁的键名</param>
         /// <param name="operation">需要执行的异步操作</param>
         /// <param name="retryCount">重试次数，默认为3次</param>
@@ -19,7 +18,7 @@ namespace FastCache.Redis.Driver
         /// <param name="msExpire">锁的过期时间（毫秒），默认为1000毫秒</param>
         /// <param name="throwOnFailure">失败时是否抛出异常</param>
         /// <returns>操作成功返回 true，否则返回 false</returns>
-        public async Task<bool> ExecuteWithRedisLockAsync(FullRedis redis, string lockKey,
+        public async Task<bool> ExecuteWithRedisLockAsync(string lockKey,
             Func<Task> operation,
             // int retryCount = 3,
             // int initialRetryDelayMs = 100,
@@ -34,7 +33,7 @@ namespace FastCache.Redis.Driver
             // while (currentRetry < retryCount)
             // {
             // 尝试获取分布式锁
-            using var redisLock = redis.AcquireLock(lockKey, msTimeout, msExpire, throwOnFailure);
+            using var redisLock = _redisClient.AcquireLock(lockKey, msTimeout, msExpire, throwOnFailure);
 
             if (redisLock != null)
             {

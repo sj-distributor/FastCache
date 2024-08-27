@@ -3,7 +3,6 @@ using System.Reflection;
 using System.Threading.Tasks;
 using FastCache.Core.Driver;
 using FastCache.Core.Entity;
-using FastCache.Redis.Constant;
 using NewLife.Caching;
 using Newtonsoft.Json;
 
@@ -25,24 +24,6 @@ namespace FastCache.Redis.Driver
             _canGetRedisClient = canGetRedisClient;
             _redisClient = new FullRedis();
             _redisClient.Init(connectionString);
-        }
-
-        public async Task<bool> SetAsyncLock(string key, CacheItem cacheItem, long expire = 0, int msTimeout = 100,
-            int msExpire = 1000,
-            bool throwOnFailure = false)
-        {
-            return await ExecuteWithRedisLockAsync(_redisClient, $"{Prefix.AddPrefix}:{key}",
-                async () => { await Set(key, cacheItem, expire); }, msTimeout, msExpire, throwOnFailure);
-        }
-
-        public async Task<bool> DeleteAsyncLock(string key, string prefix = "",
-            int msTimeout = 100,
-            int msExpire = 1000,
-            bool throwOnFailure = false)
-        {
-            return await ExecuteWithRedisLockAsync(_redisClient, $"{Prefix.DeletePrefix}:{key}",
-                async () => await Delete(key, prefix),
-                msTimeout, msExpire, throwOnFailure);
         }
 
         public Task Set(string key, CacheItem cacheItem, long expire = 0)
