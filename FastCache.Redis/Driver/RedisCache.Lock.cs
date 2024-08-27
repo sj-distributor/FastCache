@@ -23,8 +23,8 @@ namespace FastCache.Redis.Driver
             // int retryCount = 3,
             // int initialRetryDelayMs = 100,
             // int maxRetryDelayMs = 1000,
-            int msTimeout = 100,
-            int msExpire = 1000,
+            int msTimeout = 600,
+            int msExpire = 3000,
             bool throwOnFailure = false)
         {
             // int currentRetry = 0;
