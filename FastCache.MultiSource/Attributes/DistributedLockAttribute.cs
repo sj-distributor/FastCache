@@ -15,16 +15,19 @@ namespace FastCache.MultiSource.Attributes
         private readonly int _msTimeout;
         private readonly int _msExpire;
         private readonly bool _throwOnFailure;
+        private readonly bool _usePrefixToKey;
 
         public DistributedLockAttribute(string prefix,
             int msTimeout = 600,
             int msExpire = 3000,
-            bool throwOnFailure = false)
+            bool throwOnFailure = false,
+            bool usePrefixToKey = true)
         {
             _prefix = prefix;
             _msTimeout = msTimeout;
             _msExpire = msExpire;
             _throwOnFailure = throwOnFailure;
+            _usePrefixToKey = usePrefixToKey;
         }
 
         public override async Task Invoke(AspectContext context, AspectDelegate next)
@@ -32,7 +35,8 @@ namespace FastCache.MultiSource.Attributes
             var cacheClient = context.ServiceProvider.GetService<IRedisCache>();
 
             // 根据方法名和参数生成唯一的锁定键
-            var lockKey = GenerateLockKey(context);
+            var lockKey = _usePrefixToKey ? $"{_prefix}:{context.ServiceMethod.Name}" : context.ServiceMethod.Name;
+            GenerateLockKey(context);
 
             await cacheClient.ExecuteWithRedisLockAsync(
                 lockKey, async () => { await next(context); }, _msTimeout, _msExpire, _throwOnFailure);
