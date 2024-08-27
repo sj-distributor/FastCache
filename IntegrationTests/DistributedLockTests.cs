@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -12,18 +13,21 @@ using TestApi.DB;
 using TestApi.Entity;
 using TestApi.Service;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace IntegrationTests;
 
 [Collection("Sequential")]
 public class DistributedLockTests : IClassFixture<WebApplicationFactory<Program>>
 {
+    private readonly ITestOutputHelper _testOutputHelper;
     private readonly ILockUserService _lockUserService;
     private readonly HttpClient _httpClient;
     private readonly IServiceProvider _serviceProvider;
 
-    public DistributedLockTests(WebApplicationFactory<Program> factory)
+    public DistributedLockTests(WebApplicationFactory<Program> factory, ITestOutputHelper testOutputHelper)
     {
+        _testOutputHelper = testOutputHelper;
         _httpClient = factory.CreateClient();
         _serviceProvider = factory.Services;
 
@@ -41,22 +45,21 @@ public class DistributedLockTests : IClassFixture<WebApplicationFactory<Program>
     {
         var tasks = new List<Task>();
 
-        var task1 = Task.Run(() =>
+        async Task SortedSet(int index, int delayMs)
         {
-            var requestContent = new
-            {
-                user = new User { Id = "1", Name = "1" },
-                delayMs = 700
-            };
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+            var responseMessage = await _httpClient.PostAsJsonAsync($"{baseUrl}?delayMs={delayMs}",
+                new User { Id = index.ToString(), Name = index.ToString() });
+            stopwatch.Stop();
 
-            _httpClient.PostAsJsonAsync(baseUrl, requestContent);
-        });
+            var message = await responseMessage.Content.ReadAsStringAsync();
 
-        tasks.Add(task1);
+            _testOutputHelper.WriteLine($"{message} - {stopwatch.ElapsedMilliseconds}");
+        }
 
-        var task2 = Task.Run(() => { _httpClient.PostAsJsonAsync(baseUrl, new User { Id = "2", Name = "2" }); });
-
-        tasks.Add(task2);
+        tasks.Add(SortedSet(0, 700));
+        tasks.Add(SortedSet(1, 700));
 
         await Task.WhenAll(tasks);
 
@@ -67,5 +70,72 @@ public class DistributedLockTests : IClassFixture<WebApplicationFactory<Program>
         var response = JsonConvert.DeserializeObject<List<User>>(message);
 
         Assert.Single(response);
+
+        await _httpClient.DeleteAsync($"{baseUrl}?id=0");
+        await _httpClient.DeleteAsync($"{baseUrl}?id=1");
+    }
+
+    [Theory]
+    [InlineData("/UseLock")]
+    public async Task CheckCanLockAndCache(string baseUrl)
+    {
+        var tasks = new List<Task>();
+
+        async Task SortedSet(int index, int delayMs)
+        {
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+            var response = await _httpClient.PostAsJsonAsync($"{baseUrl}/add-with-cache?delayMs={delayMs}",
+                new User { Id = index.ToString(), Name = index.ToString() });
+            stopwatch.Stop();
+
+            var message = await response.Content.ReadAsStringAsync();
+
+            _testOutputHelper.WriteLine($"{message} - {stopwatch.ElapsedMilliseconds}");
+        }
+
+        tasks.Add(SortedSet(3, 800));
+        tasks.Add(SortedSet(4, 700));
+
+        await Task.WhenAll(tasks);
+
+        // 验证数据库内容
+        var resp = await _httpClient.GetAsync($"{baseUrl}/users?page=1");
+        Assert.True(resp.StatusCode == HttpStatusCode.OK);
+        var message = await resp.Content.ReadAsStringAsync();
+        var response = JsonConvert.DeserializeObject<List<User>>(message);
+        Assert.Single(response);
+
+        var stopwatch = Stopwatch.StartNew();
+        stopwatch.Start();
+
+        var resp2 = await _httpClient.GetAsync($"{baseUrl}?id={3}");
+        stopwatch.Stop();
+        var firstQuest = stopwatch.ElapsedMilliseconds;
+        if (resp2.StatusCode == HttpStatusCode.OK)
+        {
+            var message2 = await resp2.Content.ReadAsStringAsync();
+            var response2 = JsonConvert.DeserializeObject<User>(message2);
+            if (response2 != null)
+            {
+                Assert.True(firstQuest < 100);
+            }
+        }
+
+        var resp3 = await _httpClient.GetAsync($"{baseUrl}?id={3}");
+        stopwatch.Stop();
+        var stopwatchElapsed = stopwatch.ElapsedMilliseconds;
+        if (resp3.StatusCode == HttpStatusCode.OK)
+        {
+            var message3 = await resp3.Content.ReadAsStringAsync();
+            var response3 = JsonConvert.DeserializeObject<User>(message3);
+            if (response3 != null)
+            {
+                Assert.True(stopwatchElapsed < 100);
+            }
+        }
+
+        await _httpClient.DeleteAsync($"{baseUrl}?id=3");
+        await _httpClient.DeleteAsync($"{baseUrl}?id=4");
     }
 }
