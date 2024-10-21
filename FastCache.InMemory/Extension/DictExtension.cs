@@ -12,7 +12,14 @@ namespace FastCache.InMemory.Extension
             var res = dictionary.TryRemove(key, out value);
             if (res && seconds > 0)
             {
-                Task.Delay(TimeSpan.FromSeconds(seconds)).ContinueWith(_ => { dictionary.TryRemove(key, out var _); });
+                Task.Run(async () =>
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(seconds));
+                    lock (dictionary)
+                    {
+                        dictionary.TryRemove(key, out var _);
+                    }
+                });
             }
             return res;
         }
