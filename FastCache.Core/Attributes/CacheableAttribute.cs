@@ -52,8 +52,7 @@ namespace FastCache.Core.Attributes
 
             var key = KeyGenerateHelper.GetKey(_key, _expression, dictionary);
 
-            var methodInfo = context.Implementation.GetType().GetMethods()
-                .First(x => x.Name == context.ProxyMethod.Name);
+            var methodInfo = context.ImplementationMethod;
 
             var canGetCache = true;
 

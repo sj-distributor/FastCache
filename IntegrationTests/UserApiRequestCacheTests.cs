@@ -4,7 +4,6 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
-using FastCache.Core.Utils;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using TestApi.DB;
@@ -134,5 +133,50 @@ public class UserApiRequestCacheTests : IClassFixture<WebApplicationFactory<Prog
         Assert.Equal(result3, result4);
         var timeResult = end - start;
         Assert.True(timeResult < 500000);
+    }
+
+    [Fact]
+    public async void CacheBySameNameFun()
+    {
+        await _httpClient.PostAsJsonAsync("/user/indirect-impl", new User()
+        {
+            Id = "5",
+            Name = "anson5"
+        });
+
+        var resp1 = await _httpClient.GetAsync("/user?id=5");
+        Assert.Equal(HttpStatusCode.OK, resp1.StatusCode);
+        var checkResult =
+            await _httpClient.GetAsync(
+                "/user/check-cache-result?key=user-single:5&isExist=true&id=5&name=anson5");
+        Assert.Equal(HttpStatusCode.OK, checkResult.StatusCode);
+        Assert.Equal("true", await checkResult.Content.ReadAsStringAsync());
+
+        var resp2 = await _httpClient.GetAsync("/user/indirect-impl?id=5&&name=anson5");
+        Assert.Equal(HttpStatusCode.OK, resp1.StatusCode);
+        checkResult =
+            await _httpClient.GetAsync(
+                "/user/check-cache-result?key=user-single:5:anson5&isExist=true&id=5&name=anson5");
+        Assert.Equal(HttpStatusCode.OK, checkResult.StatusCode);
+        Assert.Equal("true", await checkResult.Content.ReadAsStringAsync());
+    }
+
+    [Fact]
+    public async void CacheWhileMultiImpl()
+    {
+        await _httpClient.PostAsJsonAsync("/user/indirect-impl", new User()
+        {
+            Id = "5",
+            Name = "anson5"
+        });
+
+        var resp1 = await _httpClient.GetAsync("/user/indirect-impl?id=5&&name=anson5");
+        Assert.Equal(HttpStatusCode.OK, resp1.StatusCode);
+
+        var checkResult =
+            await _httpClient.GetAsync(
+                "/user/check-cache-result?key=user-single:5:anson5&isExist=true&id=5&name=anson5");
+        Assert.Equal(HttpStatusCode.OK, checkResult.StatusCode);
+        Assert.Equal("true", await checkResult.Content.ReadAsStringAsync());
     }
 }

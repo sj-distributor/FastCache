@@ -2,11 +2,13 @@ using TestApi.Entity;
 
 namespace TestApi.Service;
 
-public interface IUserService
+public interface IUserService: IIndirectService<User>
 {
     User Add(User user);
 
     Task<User> Single(string id);
+    
+    Task<User> Single(string id, string name);
 
     Task<User> Update(User user);
 

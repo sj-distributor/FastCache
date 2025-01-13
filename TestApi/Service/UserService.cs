@@ -20,6 +20,13 @@ public class UserService : IService, IUserService
         _dbContext.SaveChanges();
         return user;
     }
+    
+    [Evictable(new[] {"user-single"}, "id")]
+    public virtual async Task<User> Single(string id, string name)
+    {
+        Thread.Sleep(TimeSpan.FromSeconds(1));
+        return await _dbContext.Set<User>().SingleAsync(x => x.Id == id && x.Name == name);
+    }
 
     [Cacheable("user-single", "{id}", 60 * 10)]
     public virtual async Task<User> Single(string id)
@@ -55,5 +62,20 @@ public class UserService : IService, IUserService
     {
         Thread.Sleep(TimeSpan.FromSeconds(1));
         return _dbContext.Set<User>().ToList();
+    }
+
+    [Evictable(new[] { "user-single", "users" }, "{entity:id}:{entity:name}")]
+    public virtual async Task<User> Add(User entity, CancellationToken cancellationToken)
+    {
+        _dbContext.Set<User>().Add(entity);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+        return entity;
+    }
+
+    [Cacheable("user-single", "{id}:{name}", 60 * 10)]
+    public virtual async Task<User> Single(string id, string name, CancellationToken cancellationToken)
+    {
+        Thread.Sleep(TimeSpan.FromSeconds(1));
+        return await _dbContext.Set<User>().SingleAsync(x => x.Id == id && x.Name == name, cancellationToken);
     }
 }
