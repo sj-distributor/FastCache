@@ -162,7 +162,7 @@ public class UserApiRequestCacheTests : IClassFixture<WebApplicationFactory<Prog
     }
 
     [Fact]
-    public async void CacheWhileMultiImpl()
+    public async void CacheWhileIndirectImpl()
     {
         await _httpClient.PostAsJsonAsync("/user/indirect-impl", new User()
         {
