@@ -153,7 +153,7 @@ public class UserApiRequestCacheTests : IClassFixture<WebApplicationFactory<Prog
         Assert.Equal("true", await checkResult.Content.ReadAsStringAsync());
 
         var resp2 = await _httpClient.GetAsync("/user/indirect-impl?id=5&&name=anson5");
-        Assert.Equal(HttpStatusCode.OK, resp1.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, resp2.StatusCode);
         checkResult =
             await _httpClient.GetAsync(
                 "/user/check-cache-result?key=user-single:5:anson5&isExist=true&id=5&name=anson5");
