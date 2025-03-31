@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -54,22 +55,31 @@ public class MultiSourceApiRequestCacheTests : IClassFixture<WebApplicationFacto
     [InlineData("/MultiSourceInMemory")]
     public async void RequestCanCache(string baseUrl)
     {
-        var start = DateTime.UtcNow.Ticks;
+        var stopwatch = new Stopwatch();
+
+        // 第一次请求
+        stopwatch.Start();
         var resp1 = await _httpClient.GetAsync($"{baseUrl}/?id=1");
+        stopwatch.Stop();
+
         Assert.True(resp1.StatusCode == HttpStatusCode.OK);
         await resp1.Content.ReadAsStringAsync();
-        var end = DateTime.UtcNow.Ticks;
 
-        Assert.True(end - start > 1000000);
+        // 验证第一次请求花费的时间是否大于 1 秒（1000 毫秒）
+        var firstRequestDuration = stopwatch.ElapsedMilliseconds;
+        Assert.True(firstRequestDuration > 1000);
 
-        var start1 = DateTime.UtcNow.Ticks;
+        // 第二次请求
+        stopwatch.Restart();
         var resp2 = await _httpClient.GetAsync($"{baseUrl}?id=1");
+        stopwatch.Stop();
+
         Assert.True(resp2.StatusCode == HttpStatusCode.OK);
         await resp2.Content.ReadAsStringAsync();
-        var end1 = DateTime.UtcNow.Ticks;
 
-        var result = end1 - start1;
-        Assert.True(result < 400000);
+        // 验证第二次请求花费的时间是否小于 400 毫秒
+        var secondRequestDuration = stopwatch.ElapsedMilliseconds;
+        Assert.True(secondRequestDuration < 400);
     }
 
     [Theory]

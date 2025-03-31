@@ -10,7 +10,7 @@ namespace FastCache.Core.Driver
         Task<CacheItem> Get(string key);
 
         Task Delete(string key, string prefix);
-        
+
         Task Delete(string key);
     }
 }
