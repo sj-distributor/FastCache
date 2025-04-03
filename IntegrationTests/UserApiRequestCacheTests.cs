@@ -71,6 +71,9 @@ public class UserApiRequestCacheTests : IClassFixture<WebApplicationFactory<Prog
 
         var result = end1 - start1;
         Assert.True(result < 400000);
+        
+        var respByResultNull = await _httpClient.GetAsync("/user/get?userId=4");
+        Assert.Equal(HttpStatusCode.NoContent, respByResultNull.StatusCode);
     }
 
     [Fact]
@@ -135,4 +138,6 @@ public class UserApiRequestCacheTests : IClassFixture<WebApplicationFactory<Prog
         var timeResult = end - start;
         Assert.True(timeResult < 500000);
     }
+    
+    
 }

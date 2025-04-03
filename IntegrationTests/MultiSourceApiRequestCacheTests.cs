@@ -147,4 +147,15 @@ public class MultiSourceApiRequestCacheTests : IClassFixture<WebApplicationFacto
         var timeResult = end - start;
         Assert.True(timeResult < 500000);
     }
+    
+    [Theory]
+    [InlineData("/MultiSource")]
+    public async void CacheResultTaskNull(string baseUrl)
+    {
+        var resp1 = await _httpClient.GetAsync($"{baseUrl}/get?id=null");
+        Assert.Equal(HttpStatusCode.NoContent, resp1.StatusCode);
+        
+        var result1 = await resp1.Content.ReadAsStringAsync();
+        Assert.Equal("", result1);
+    }
 }

@@ -51,4 +51,10 @@ public class MultiSourceController : ControllerBase
     {
         return _userService.List(page);
     }
+    
+    [HttpGet("get")]
+    public virtual async Task<User?> TestResultNull(string id)
+    {
+        return await _userService.SingleOrDefault(id);
+    }
 }

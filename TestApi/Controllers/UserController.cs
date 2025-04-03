@@ -45,4 +45,10 @@ public class UserController : ControllerBase
     {
         return _userService.List(page);
     }
+    
+    [HttpGet("get")]
+    public async Task<User?> GetSingleOrDefault(string userId)
+    {
+        return await _userService.SingleOrDefault(userId);
+    }
 }
