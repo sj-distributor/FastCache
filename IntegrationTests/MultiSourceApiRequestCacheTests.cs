@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using TestApi.DB;
@@ -150,11 +151,38 @@ public class MultiSourceApiRequestCacheTests : IClassFixture<WebApplicationFacto
     
     [Theory]
     [InlineData("/MultiSource")]
+    public async Task TestUpdated(string baseUrl)
+    {
+        var responseMessage = await _httpClient.GetAsync($"{baseUrl}?id=1");
+        Assert.Equal(responseMessage.StatusCode, HttpStatusCode.OK);
+
+        var user = await responseMessage.Content.ReadFromJsonAsync<User>();
+
+        Assert.NotNull(user);
+
+        user.Name = "joe";
+
+        var updateAfter = await _httpClient.PutAsJsonAsync(baseUrl, user);
+        Assert.Equal(updateAfter.StatusCode, HttpStatusCode.OK);
+
+
+        var responseMessageUpdated = await _httpClient.GetAsync($"{baseUrl}?id=1");
+        Assert.Equal(responseMessageUpdated.StatusCode, HttpStatusCode.OK);
+
+        var updatedUser = await responseMessageUpdated.Content.ReadFromJsonAsync<User>();
+
+        Assert.NotNull(updatedUser);
+        Assert.Equal(updatedUser.Name, "joe");
+    }
+
+
+    [Theory]
+    [InlineData("/MultiSource")]
     public async void CacheResultTaskNull(string baseUrl)
     {
         var resp1 = await _httpClient.GetAsync($"{baseUrl}/get?id=null");
         Assert.Equal(HttpStatusCode.NoContent, resp1.StatusCode);
-        
+
         var result1 = await resp1.Content.ReadAsStringAsync();
         Assert.Equal("", result1);
     }
