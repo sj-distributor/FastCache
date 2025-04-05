@@ -34,6 +34,13 @@ public class UserService : IService, IUserService
         Thread.Sleep(TimeSpan.FromSeconds(1));
         return await _dbContext.Set<User>().SingleAsync(x => x.Id == id);
     }
+    
+    [Cacheable("user-single", "{id}", 60 * 10)]
+    public virtual async Task<User?> SingleOrDefault(string id)
+    {
+        Thread.Sleep(TimeSpan.FromSeconds(1));
+        return await _dbContext.Set<User>().SingleOrDefaultAsync(x => x.Id == id);
+    }
 
     [Cacheable("user-single", "{user:id}{user:thirdPartyIds}", 60 * 10)]
     [Evictable(new[] { "user-single", "users" }, "{user:id}")]

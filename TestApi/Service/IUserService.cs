@@ -10,6 +10,8 @@ public interface IUserService: IIndirectService<User>
     
     Task<User> Single(string id, string name);
 
+    Task<User?> SingleOrDefault(string id);
+
     Task<User> Update(User user);
 
     bool Delete(string id);

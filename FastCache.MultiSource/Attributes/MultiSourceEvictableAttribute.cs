@@ -28,7 +28,7 @@ namespace FastCache.MultiSource.Attributes
         public override async Task Invoke(AspectContext context, AspectDelegate next)
         {
             await next(context);
-            
+
             ICacheClient cacheClient;
 
             switch (_target)
@@ -49,10 +49,12 @@ namespace FastCache.MultiSource.Attributes
             {
                 dictionary.Add(parameterInfos[i].Name, context.Parameters[i]);
             }
-            
+
             foreach (var s in _keys)
             {
-                await cacheClient.Delete(KeyGenerateHelper.GetKey(s, _expression, dictionary));
+                var key = KeyGenerateHelper.GetKey(_expression, dictionary);
+
+                await cacheClient.Delete(key, s);
             }
         }
     }

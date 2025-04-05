@@ -50,7 +50,7 @@ namespace FastCache.InMemory.Drivers
             {
                 ReleaseCached(bucket);
             }
-            
+
             if (cacheItem.Value != null)
             {
                 cacheItem.Value = JsonConvert.SerializeObject(cacheItem.Value);
@@ -71,7 +71,7 @@ namespace FastCache.InMemory.Drivers
                 Delete(key);
                 return Task.FromResult(new CacheItem());
             }
-            
+
             if (cacheItem?.AssemblyName == null || cacheItem?.Type == null) return Task.FromResult(new CacheItem());
             ++cacheItem.Hits;
             object? value = null;

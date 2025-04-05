@@ -74,10 +74,16 @@ public class UserController : ControllerBase
     public async Task<bool> GetCheckCacheResult(string key, bool isExist, string id, string name)
     {
         var result = await _cacheClient.Get(key);
-        var value = (User?) result.Value;
+        var value = (User?)result.Value;
 
         if (!isExist) return value == null;
 
         return value != null && value.Id == id && value.Name == name;
+    }
+
+    [HttpGet("get")]
+    public async Task<User?> GetSingleOrDefault(string userId)
+    {
+        return await _userService.SingleOrDefault(userId);
     }
 }

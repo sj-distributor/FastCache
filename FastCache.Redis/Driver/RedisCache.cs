@@ -3,17 +3,18 @@ using System.Reflection;
 using System.Threading.Tasks;
 using FastCache.Core.Driver;
 using FastCache.Core.Entity;
+using NewLife.Caching;
 using Newtonsoft.Json;
 
 namespace FastCache.Redis.Driver
 {
-    public class RedisCache : IRedisCache
+    public partial class RedisCache : IRedisCache
     {
         private bool _canGetRedisClient = false;
 
-        private readonly NewLife.Caching.FullRedis _redisClient;
+        private readonly FullRedis _redisClient;
 
-        public NewLife.Caching.Redis? GetRedisClient()
+        public FullRedis? GetRedisClient()
         {
             return _canGetRedisClient ? _redisClient : null;
         }
@@ -21,7 +22,7 @@ namespace FastCache.Redis.Driver
         public RedisCache(string connectionString, bool canGetRedisClient = false)
         {
             _canGetRedisClient = canGetRedisClient;
-            _redisClient = new NewLife.Caching.FullRedis();
+            _redisClient = new FullRedis();
             _redisClient.Init(connectionString);
         }
 

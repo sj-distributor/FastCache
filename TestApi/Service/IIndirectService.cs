@@ -22,5 +22,6 @@ public static class RegisterService
     {
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<IMultiSourceService, MultiSourceService>();
+        services.AddScoped<ILockUserService, LockUserService>();
     }
 }
