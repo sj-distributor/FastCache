@@ -1,53 +1,59 @@
 using FastCache.Core.Attributes;
+using FastCache.Core.Enums;
+using FastCache.MultiSource.Attributes;
 using Microsoft.EntityFrameworkCore;
 using TestApi.DB;
 using TestApi.Entity;
 
 namespace TestApi.Service;
 
-public class MultiSourceService : IService, IMultiSourceService
+public class MultiSourceService(MemoryDbContext dbContext) : IService, IMultiSourceService
 {
-    private readonly MemoryDbContext _dbContext;
-
-    public MultiSourceService(MemoryDbContext dbContext)
-    {
-        _dbContext = dbContext;
-    }
-
     public virtual User Add(User user)
     {
-        _dbContext.Set<User>().Add(user);
-        _dbContext.SaveChanges();
+        dbContext.Set<User>().Add(user);
+        dbContext.SaveChanges();
         return user;
     }
 
     public virtual async Task<User> Single(string id)
     {
         Thread.Sleep(TimeSpan.FromSeconds(1));
-        return await _dbContext.Set<User>().SingleAsync(x => x.Id == id);
+        return await dbContext.Set<User>().SingleAsync(x => x.Id == id);
     }
 
     public virtual async Task<User> Update(User user)
     {
-        var first = await _dbContext.Set<User>().FirstAsync(x => x.Id == user.Id);
+        var first = await dbContext.Set<User>().FirstAsync(x => x.Id == user.Id);
         first.Name = user.Name;
-        _dbContext.Set<User>().Update(first);
-        await _dbContext.SaveChangesAsync();
+        dbContext.Set<User>().Update(first);
+        await dbContext.SaveChangesAsync();
         return first;
     }
 
     public virtual bool Delete(string id)
     {
-        var user = _dbContext.Set<User>().FirstOrDefault(x => x.Id == id);
+        var user = dbContext.Set<User>().FirstOrDefault(x => x.Id == id);
         if (user == null) return false;
-        _dbContext.Set<User>().Remove(user);
-        _dbContext.SaveChanges();
+        dbContext.Set<User>().Remove(user);
+        dbContext.SaveChanges();
         return true;
     }
 
     public virtual IEnumerable<User> List(string page)
     {
         Thread.Sleep(TimeSpan.FromSeconds(1));
-        return _dbContext.Set<User>().ToList();
+        return dbContext.Set<User>().ToList();
+    }
+    
+    [MultiSourceCacheable("MultiSource-single", "{id}", Target.Redis, 5)]
+    public async Task<User?> SingleOrDefault(string id)
+    {
+        return await dbContext.Set<User>().SingleOrDefaultAsync(x => x.Id == id);
+    }
+
+    public virtual Task<string?> TestReturnNull()
+    {
+        return null;
     }
 }
