@@ -6,6 +6,7 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
+using FastCache.Core.Driver;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using TestApi.DB;
@@ -148,7 +149,7 @@ public class MultiSourceApiRequestCacheTests : IClassFixture<WebApplicationFacto
         var timeResult = end - start;
         Assert.True(timeResult < 500000);
     }
-    
+
     [Theory]
     [InlineData("/MultiSource")]
     public async Task TestUpdated(string baseUrl)
@@ -185,5 +186,37 @@ public class MultiSourceApiRequestCacheTests : IClassFixture<WebApplicationFacto
 
         var result1 = await resp1.Content.ReadAsStringAsync();
         Assert.Equal("", result1);
+    }
+
+    [Theory]
+    [InlineData("/MultiSource")]
+    public async void TestRemove(string baseUrl)
+    {
+        var responseMessage = await _httpClient.GetAsync($"{baseUrl}?id=1");
+        Assert.Equal(responseMessage.StatusCode, HttpStatusCode.OK);
+
+        var user = await responseMessage.Content.ReadFromJsonAsync<User>();
+
+        var responseMessageBySearchName = await _httpClient.GetAsync($"{baseUrl}/get/name?name=anson1");
+        Assert.Equal(responseMessageBySearchName.StatusCode, HttpStatusCode.OK);
+
+        var responseMessageBySearchNameDeleted = await _httpClient.GetAsync($"{baseUrl}/get/name?name=anson1");
+        Assert.Equal(responseMessageBySearchName.StatusCode, HttpStatusCode.OK);
+
+        var userDeleted = await responseMessageBySearchNameDeleted.Content.ReadFromJsonAsync<User>();
+
+        Assert.Equal(userDeleted.Name, "anson1");
+
+        user.Name = "joe";
+
+        var updateAfter = await _httpClient.PutAsJsonAsync(baseUrl, user);
+        Assert.Equal(updateAfter.StatusCode, HttpStatusCode.OK);
+
+        var responseMessageBySearchNameUpdated = await _httpClient.GetAsync($"{baseUrl}/get/name?name=joe");
+        Assert.Equal(responseMessageBySearchNameUpdated.StatusCode, HttpStatusCode.OK);
+        
+        var userUpdated = await responseMessageBySearchNameUpdated.Content.ReadFromJsonAsync<User>();
+        
+        Assert.Equal(userUpdated.Name, "joe");
     }
 }
