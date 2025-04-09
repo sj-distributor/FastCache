@@ -19,12 +19,10 @@ namespace IntegrationTests;
 [Collection("Sequential")]
 public class MultiSourceApiRequestCacheTests : IClassFixture<WebApplicationFactory<Program>>
 {
-    private readonly RedisCache _redisCache;
     private readonly HttpClient _httpClient;
 
-    public MultiSourceApiRequestCacheTests(WebApplicationFactory<Program> factory, RedisCache redisCache)
+    public MultiSourceApiRequestCacheTests(WebApplicationFactory<Program> factory)
     {
-        _redisCache = redisCache;
         _httpClient = factory.CreateClient();
         var memoryDbContext = factory.Services.GetService<MemoryDbContext>();
         var list = memoryDbContext.Set<User>().ToList();
@@ -61,8 +59,6 @@ public class MultiSourceApiRequestCacheTests : IClassFixture<WebApplicationFacto
     [InlineData("/MultiSourceInMemory")]
     public async void RequestCanCache(string baseUrl)
     {
-        _redisCache.GetRedisClient()!.Clear();
-
         var stopwatch = new Stopwatch();
 
         // 第一次请求
