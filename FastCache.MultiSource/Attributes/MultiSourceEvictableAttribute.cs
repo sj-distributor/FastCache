@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using AspectCore.DynamicProxy;
 using FastCache.Core.Driver;
@@ -12,12 +14,14 @@ namespace FastCache.MultiSource.Attributes
     public class MultiSourceEvictableAttribute : AbstractInterceptorAttribute
     {
         private readonly string[] _keys;
-        private readonly string _expression;
+        private readonly string[] _expression;
         private readonly Target _target;
 
         public sealed override int Order { get; set; }
 
-        public MultiSourceEvictableAttribute(string[] keys, string expression, Target target)
+        public override bool AllowMultiple { get; } = true;
+
+        public MultiSourceEvictableAttribute(string[] keys, string[] expression, Target target)
         {
             _keys = keys;
             _expression = expression;
@@ -43,6 +47,8 @@ namespace FastCache.MultiSource.Attributes
                     throw new ArgumentOutOfRangeException();
             }
 
+            var tasks = new ConcurrentBag<Task>();
+
             var dictionary = new Dictionary<string, object>();
             var parameterInfos = context.ImplementationMethod.GetParameters();
             for (var i = 0; i < context.Parameters.Length; i++)
@@ -50,11 +56,21 @@ namespace FastCache.MultiSource.Attributes
                 dictionary.Add(parameterInfos[i].Name, context.Parameters[i]);
             }
 
-            foreach (var s in _keys)
-            {
-                var key = KeyGenerateHelper.GetKey(_expression, dictionary);
+            var keys = _keys.Select(x => x.Trim()).Distinct().ToList();
+            var expressions = _expression.Select(x => x.Trim()).Distinct().ToList();
 
-                await cacheClient.Delete(key, s);
+            foreach (var key in keys)
+            {
+                foreach (var expression in expressions)
+                {
+                    var deleteKey = KeyGenerateHelper.GetKey(expression, dictionary);
+                    tasks.Add(cacheClient.Delete(deleteKey, key));
+                }
+            }
+
+            if (tasks.Count > 0)
+            {
+                await Task.WhenAll(tasks);
             }
         }
     }

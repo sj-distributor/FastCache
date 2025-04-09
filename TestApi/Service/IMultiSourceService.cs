@@ -10,6 +10,8 @@ public interface IMultiSourceService
 
     Task<User?> SingleOrDefault(string id);
 
+    Task<User?> SingleOrDefaultByName(string name);
+
     Task<User> Update(User user);
 
     bool Delete(string id);

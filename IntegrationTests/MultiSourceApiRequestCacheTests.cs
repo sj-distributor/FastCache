@@ -6,6 +6,8 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
+using FastCache.Core.Driver;
+using FastCache.Redis.Driver;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using TestApi.DB;
@@ -31,7 +33,8 @@ public class MultiSourceApiRequestCacheTests : IClassFixture<WebApplicationFacto
             new()
             {
                 Id = "1",
-                Name = "anson1"
+                Name = "anson1",
+                Age = 10
             },
             new()
             {
@@ -148,7 +151,7 @@ public class MultiSourceApiRequestCacheTests : IClassFixture<WebApplicationFacto
         var timeResult = end - start;
         Assert.True(timeResult < 500000);
     }
-    
+
     [Theory]
     [InlineData("/MultiSource")]
     public async Task TestUpdated(string baseUrl)
@@ -185,5 +188,47 @@ public class MultiSourceApiRequestCacheTests : IClassFixture<WebApplicationFacto
 
         var result1 = await resp1.Content.ReadAsStringAsync();
         Assert.Equal("", result1);
+    }
+
+    [Theory]
+    [InlineData("/MultiSource")]
+    public async void TestMultiSourceEvictableAllowsEvictionByMultipleRules(string baseUrl)
+    {
+        var responseMessage = await _httpClient.GetAsync($"{baseUrl}?id=1");
+        Assert.Equal(responseMessage.StatusCode, HttpStatusCode.OK);
+
+        var user = await responseMessage.Content.ReadFromJsonAsync<User>();
+        Assert.Equal(user.Name, "anson1");
+        Assert.Equal(user.Age, 10);
+
+        var responseMessageBySearchName = await _httpClient.GetAsync($"{baseUrl}/get/name?name=anson1");
+        Assert.Equal(responseMessageBySearchName.StatusCode, HttpStatusCode.OK);
+
+        var userBySearchName = await responseMessageBySearchName.Content.ReadFromJsonAsync<User>();
+
+        Assert.Equal(userBySearchName.Name, "anson1");
+        Assert.Equal(userBySearchName.Age, 10);
+
+        user.Age = 1;
+
+        var updateAfter = await _httpClient.PutAsJsonAsync(baseUrl, user);
+        Assert.Equal(updateAfter.StatusCode, HttpStatusCode.OK);
+
+        var responseMessageBySearchNameUpdated = await _httpClient.GetAsync($"{baseUrl}/get/name?name=anson1");
+        Assert.Equal(responseMessageBySearchNameUpdated.StatusCode, HttpStatusCode.OK);
+
+        var userUpdated = await responseMessageBySearchNameUpdated.Content.ReadFromJsonAsync<User>();
+        Assert.Equal("anson1", userUpdated.Name);
+        Assert.Equal(1, userUpdated.Age);
+
+        var deleted = await _httpClient.DeleteAsync($"{baseUrl}?id=1");
+        Assert.True(deleted.StatusCode == HttpStatusCode.OK);
+
+        var responseMessageBySearchNameDeleted = await _httpClient.GetAsync($"{baseUrl}/get/name?name=anson1");
+        Assert.Equal(responseMessageBySearchNameDeleted.StatusCode, HttpStatusCode.OK);
+
+        var userDeleted = await responseMessageBySearchNameDeleted.Content.ReadFromJsonAsync<User>();
+        Assert.Equal("anson1", userDeleted.Name);
+        Assert.Equal(1, userDeleted.Age);
     }
 }

@@ -32,14 +32,14 @@ public class MultiSourceInMemoryController : ControllerBase
 
     [HttpPut]
     [MultiSourceCacheable("MultiSource-single", "{user:id}", Target.InMemory, 5)]
-    [MultiSourceEvictable(new[] { "MultiSource-single", "MultiSources" }, "{user:id}", Target.InMemory)]
+    [MultiSourceEvictable(new[] { "MultiSource-single", "MultiSources" }, ["{user:id}"], Target.InMemory)]
     public virtual async Task<User> Update(User user)
     {
         return await _userService.Update(user);
     }
 
     [HttpDelete]
-    [MultiSourceEvictable(new[] { "MultiSource-single", "MultiSources" }, "{id}", Target.InMemory)]
+    [MultiSourceEvictable(new[] { "MultiSource-single", "MultiSources" }, ["{id}"], Target.InMemory)]
     public virtual bool Delete(string id)
     {
         return _userService.Delete(id);
