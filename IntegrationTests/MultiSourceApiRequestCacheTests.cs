@@ -190,7 +190,7 @@ public class MultiSourceApiRequestCacheTests : IClassFixture<WebApplicationFacto
 
     [Theory]
     [InlineData("/MultiSource")]
-    public async void TestRemove(string baseUrl)
+    public async void TestMultiSourceEvictableAllowsEvictionByMultipleRules(string baseUrl)
     {
         var responseMessage = await _httpClient.GetAsync($"{baseUrl}?id=1");
         Assert.Equal(responseMessage.StatusCode, HttpStatusCode.OK);
