@@ -63,7 +63,9 @@ namespace FastCache.MultiSource.Attributes
             {
                 foreach (var expression in expressions)
                 {
-                    tasks.Add(cacheClient.Delete(KeyGenerateHelper.GetKey(expression, dictionary), key));
+                    var deleteKey = KeyGenerateHelper.GetKey(expression, dictionary);
+                    await cacheClient.Delete(deleteKey, key);
+                    // tasks.Add(cacheClient.Delete(deleteKey, key));
                 }
             }
 

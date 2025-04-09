@@ -26,6 +26,7 @@ public class MultiSourceService(MemoryDbContext dbContext) : IService, IMultiSou
     {
         var first = await dbContext.Set<User>().FirstAsync(x => x.Id == user.Id);
         first.Name = user.Name;
+        first.Age = user.Age;
         dbContext.Set<User>().Update(first);
         await dbContext.SaveChangesAsync();
         return first;

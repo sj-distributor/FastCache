@@ -7,6 +7,7 @@ using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
 using FastCache.Core.Driver;
+using FastCache.Redis.Driver;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using TestApi.DB;
@@ -18,10 +19,12 @@ namespace IntegrationTests;
 [Collection("Sequential")]
 public class MultiSourceApiRequestCacheTests : IClassFixture<WebApplicationFactory<Program>>
 {
+    private readonly RedisCache _redisCache;
     private readonly HttpClient _httpClient;
 
-    public MultiSourceApiRequestCacheTests(WebApplicationFactory<Program> factory)
+    public MultiSourceApiRequestCacheTests(WebApplicationFactory<Program> factory, RedisCache redisCache)
     {
+        _redisCache = redisCache;
         _httpClient = factory.CreateClient();
         var memoryDbContext = factory.Services.GetService<MemoryDbContext>();
         var list = memoryDbContext.Set<User>().ToList();
@@ -32,7 +35,8 @@ public class MultiSourceApiRequestCacheTests : IClassFixture<WebApplicationFacto
             new()
             {
                 Id = "1",
-                Name = "anson1"
+                Name = "anson1",
+                Age = 10
             },
             new()
             {
@@ -57,6 +61,8 @@ public class MultiSourceApiRequestCacheTests : IClassFixture<WebApplicationFacto
     [InlineData("/MultiSourceInMemory")]
     public async void RequestCanCache(string baseUrl)
     {
+        _redisCache.GetRedisClient()!.Clear();
+
         var stopwatch = new Stopwatch();
 
         // 第一次请求
@@ -196,27 +202,37 @@ public class MultiSourceApiRequestCacheTests : IClassFixture<WebApplicationFacto
         Assert.Equal(responseMessage.StatusCode, HttpStatusCode.OK);
 
         var user = await responseMessage.Content.ReadFromJsonAsync<User>();
+        Assert.Equal(user.Name, "anson1");
+        Assert.Equal(user.Age, 10);
 
         var responseMessageBySearchName = await _httpClient.GetAsync($"{baseUrl}/get/name?name=anson1");
         Assert.Equal(responseMessageBySearchName.StatusCode, HttpStatusCode.OK);
 
-        var responseMessageBySearchNameDeleted = await _httpClient.GetAsync($"{baseUrl}/get/name?name=anson1");
-        Assert.Equal(responseMessageBySearchName.StatusCode, HttpStatusCode.OK);
+        var userBySearchName = await responseMessageBySearchName.Content.ReadFromJsonAsync<User>();
 
-        var userDeleted = await responseMessageBySearchNameDeleted.Content.ReadFromJsonAsync<User>();
+        Assert.Equal(userBySearchName.Name, "anson1");
+        Assert.Equal(userBySearchName.Age, 10);
 
-        Assert.Equal(userDeleted.Name, "anson1");
-
-        user.Name = "joe";
+        user.Age = 1;
 
         var updateAfter = await _httpClient.PutAsJsonAsync(baseUrl, user);
         Assert.Equal(updateAfter.StatusCode, HttpStatusCode.OK);
 
-        var responseMessageBySearchNameUpdated = await _httpClient.GetAsync($"{baseUrl}/get/name?name=joe");
+        var responseMessageBySearchNameUpdated = await _httpClient.GetAsync($"{baseUrl}/get/name?name=anson1");
         Assert.Equal(responseMessageBySearchNameUpdated.StatusCode, HttpStatusCode.OK);
-        
+
         var userUpdated = await responseMessageBySearchNameUpdated.Content.ReadFromJsonAsync<User>();
-        
-        Assert.Equal(userUpdated.Name, "joe");
+        Assert.Equal("anson1", userUpdated.Name);
+        Assert.Equal(1, userUpdated.Age);
+
+        var deleted = await _httpClient.DeleteAsync($"{baseUrl}?id=1");
+        Assert.True(deleted.StatusCode == HttpStatusCode.OK);
+
+        var responseMessageBySearchNameDeleted = await _httpClient.GetAsync($"{baseUrl}/get/name?name=anson1");
+        Assert.Equal(responseMessageBySearchNameDeleted.StatusCode, HttpStatusCode.OK);
+
+        var userDeleted = await responseMessageBySearchNameDeleted.Content.ReadFromJsonAsync<User>();
+        Assert.Equal("anson1", userDeleted.Name);
+        Assert.Equal(1, userDeleted.Age);
     }
 }

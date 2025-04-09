@@ -7,5 +7,7 @@ public record User : IEntity
     public string Id { get; set; }
     public string Name { get; set; }
     
+    public int Age { get; set; }
+    
     [NotMapped]public List<long>? ThirdPartyIds { get; set; }
 }
