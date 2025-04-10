@@ -8,6 +8,8 @@ public interface IMultiSourceService
 
     Task<User> Single(string id);
 
+    Task<User?> SingleOrDefault(string id, string name, bool canChange);
+
     Task<User?> SingleOrDefault(string id);
 
     Task<User?> SingleOrDefaultByName(string name);

@@ -22,6 +22,12 @@ public class MultiSourceService(MemoryDbContext dbContext) : IService, IMultiSou
         return await dbContext.Set<User>().SingleAsync(x => x.Id == id);
     }
 
+    [MultiSourceCacheable("MultiSource-single", "{id}:{name}", Target.Redis, 60)]
+    public virtual async Task<User?> SingleOrDefault(string id, string name, bool canChange)
+    {
+        return await dbContext.Set<User>().SingleOrDefaultAsync(x => x.Id == id && x.Name == name);
+    }
+
     public virtual async Task<User> Update(User user)
     {
         var first = await dbContext.Set<User>().FirstAsync(x => x.Id == user.Id);

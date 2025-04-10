@@ -51,7 +51,8 @@ namespace FastCache.Redis.Driver
         public Task<CacheItem> Get(string key)
         {
             var cacheValue = _redisClient.Get<CacheItem>(key);
-            if (cacheValue?.AssemblyName == null || cacheValue?.Type == null) return Task.FromResult(new CacheItem());
+            if (string.IsNullOrWhiteSpace(cacheValue?.AssemblyName) || string.IsNullOrWhiteSpace(cacheValue?.Type) ||
+                cacheValue?.Value == null) return Task.FromResult(new CacheItem());
 
             var assembly = Assembly.Load(cacheValue.AssemblyName);
             var valueType = assembly.GetType(cacheValue.Type, true, true);
