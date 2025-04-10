@@ -231,4 +231,15 @@ public class MultiSourceApiRequestCacheTests : IClassFixture<WebApplicationFacto
         Assert.Equal("anson1", userDeleted.Name);
         Assert.Equal(1, userDeleted.Age);
     }
+
+    [Theory]
+    [InlineData("/MultiSource")]
+    public async void TestMultiSourceCacheableMultipleParam(string baseUrl)
+    {
+        var responseMessage = await _httpClient.GetAsync($"{baseUrl}/get/two?id=123&name=anson1");
+        Assert.Equal(responseMessage.StatusCode, HttpStatusCode.NoContent);
+        
+        var responseMessage2 = await _httpClient.GetAsync($"{baseUrl}/get/two?id=123&name=anson1");
+        Assert.Equal(responseMessage2.StatusCode, HttpStatusCode.NoContent);
+    }
 }
