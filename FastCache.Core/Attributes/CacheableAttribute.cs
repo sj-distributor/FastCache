@@ -12,17 +12,43 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace FastCache.Core.Attributes
 {
+    /// <summary>
+    /// 规则支持说明
+    /// Based on the provided test cases, the `KeyGenerateHelper.GetKey` method supports the following rules for generating cache keys:
+    /// Supported Rules
+    ///  1. **Basic Property Access**:
+    /// - `{company:name}`: Accesses the `Name` property of the `Company` object.
+    ///  - `{company:id}`: Accesses the `Id` property.
+    ///  2. **List and Array Indexing**:
+    ///  - `{company:menus:0:openTime}`: Accesses the `openTime` of the first menu in the `Menus` list.
+    ///  - `{company:merchants:0:merchantIds:0}`: Accesses the first `MerchantId` of the first merchant.
+    ///  3. **Iterating All Elements**:
+    ///  - `{company:menus:id:all}`: Joins all `Id`s from the `Menus` list.
+    ///  - `{company:menus:0:menuSettings:id:all}`: Joins all `Id`s from `MenuSettings` of the first menu.
+    ///  4. **Combining Multiple Properties**:
+    ///  - `{company:name}:{company:id}`: Combines multiple properties into a single key.
+    ///  - `{company:menus:id:all}:{company:id}`: Combines all menu IDs with company ID.
+    /// 5. **Wildcard for All Elements**:
+    ///  - `{company:all}:{company:id}` or similar patterns can be used to indicate special handling, though specifics depend on implementation details not provided here.
+    /// General Structure
+    /// - Prefix is added at the beginning (`single:`).
+    /// - Patterns within curly braces are replaced with corresponding values from object properties or collections.
+    ///  - Supports indexing and iteration over lists/arrays using specific indices or "all" for concatenation.
+    ///  - Combinations of different patterns are supported to form complex keys.
+    /// Implementation Notes
+    ///  Ensure that your method correctly interprets these patterns and handles edge cases, such as missing data or empty lists, to prevent errors like null reference exceptions.
+    /// </summary>
     public class CacheableAttribute : AbstractInterceptorAttribute
     {
         private readonly string _key;
         private readonly string _expression;
         private readonly long _expire;
-        
+
         public sealed override int Order { get; set; }
-        
+
         private static readonly ConcurrentDictionary<Type, MethodInfo>
             TypeofTaskResultMethod = new ConcurrentDictionary<Type, MethodInfo>();
-        
+
         private static readonly MethodInfo _taskResultMethod;
 
         static CacheableAttribute()
@@ -84,9 +110,11 @@ namespace FastCache.Core.Attributes
                         ? context.ServiceMethod.ReturnType.GetGenericArguments().First()
                         : context.ServiceMethod.ReturnType;
 
-                    context.ReturnValue =  context.IsAsync() ? TypeofTaskResultMethod.GetOrAdd(returnTypeBefore,
-                            t => _taskResultMethod.MakeGenericMethod(returnTypeBefore))
-                        .Invoke(null, new [] { cacheValue.Value }) : cacheValue.Value;
+                    context.ReturnValue = context.IsAsync()
+                        ? TypeofTaskResultMethod.GetOrAdd(returnTypeBefore,
+                                t => _taskResultMethod.MakeGenericMethod(returnTypeBefore))
+                            .Invoke(null, new[] { cacheValue.Value })
+                        : cacheValue.Value;
                     return;
                 }
             }
@@ -103,7 +131,7 @@ namespace FastCache.Core.Attributes
             {
                 value = context.ReturnValue;
             }
-            
+
             var returnType = value?.GetType();
 
             await cacheClient.Set(key, new CacheItem
