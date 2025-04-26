@@ -26,17 +26,17 @@ public class UserApiRequestCacheTests : IClassFixture<WebApplicationFactory<Prog
         memoryDbContext.SaveChanges();
         var users = new List<User>()
         {
-            new()
+            new(DateTimeOffset.UtcNow)
             {
                 Id = "1",
                 Name = "anson1"
             },
-            new()
+            new(DateTimeOffset.UtcNow)
             {
                 Id = "2",
                 Name = "anson2"
             },
-            new()
+            new(DateTimeOffset.UtcNow)
             {
                 Id = "3",
                 Name = "anson3"
@@ -83,7 +83,7 @@ public class UserApiRequestCacheTests : IClassFixture<WebApplicationFactory<Prog
 
         var result1 = await resp1.Content.ReadAsStringAsync();
 
-        var resultForPost = await _httpClient.PutAsJsonAsync("/user?id=3", new User()
+        var resultForPost = await _httpClient.PutAsJsonAsync("/user?id=3", new User(DateTimeOffset.UtcNow)
         {
             Id = "3",
             Name = "anson33",
@@ -104,7 +104,7 @@ public class UserApiRequestCacheTests : IClassFixture<WebApplicationFactory<Prog
     [Fact]
     public async void CacheAndEvictOther()
     {
-        await _httpClient.PostAsJsonAsync("/user", new User()
+        await _httpClient.PostAsJsonAsync("/user", new User(DateTimeOffset.UtcNow)
         {
             Id = "5",
             Name = "anson5"
@@ -141,7 +141,7 @@ public class UserApiRequestCacheTests : IClassFixture<WebApplicationFactory<Prog
     [Fact]
     public async void CacheBySameNameFun()
     {
-        await _httpClient.PostAsJsonAsync("/user/indirect-impl", new User()
+        await _httpClient.PostAsJsonAsync("/user/indirect-impl", new User(DateTimeOffset.UtcNow)
         {
             Id = "5",
             Name = "anson5"
@@ -167,7 +167,7 @@ public class UserApiRequestCacheTests : IClassFixture<WebApplicationFactory<Prog
     [Fact]
     public async void CacheWhileIndirectImpl()
     {
-        await _httpClient.PostAsJsonAsync("/user/indirect-impl", new User()
+        await _httpClient.PostAsJsonAsync("/user/indirect-impl", new User(DateTimeOffset.UtcNow)
         {
             Id = "5",
             Name = "anson5"
