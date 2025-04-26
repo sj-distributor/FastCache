@@ -53,7 +53,7 @@ public class MultiSourceService(MemoryDbContext dbContext) : IService, IMultiSou
         return dbContext.Set<User>().ToList();
     }
     
-    [MultiSourceCacheable("MultiSource-single", "{id}", Target.Redis, 5)]
+    [MultiSourceCacheable("MultiSource-single", "{id}", Target.Redis, 1000)]
     public async Task<User?> SingleOrDefault(string id)
     {
         return await dbContext.Set<User>().SingleOrDefaultAsync(x => x.Id == id);

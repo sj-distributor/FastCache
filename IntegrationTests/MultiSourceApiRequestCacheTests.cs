@@ -6,8 +6,6 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
-using FastCache.Core.Driver;
-using FastCache.Redis.Driver;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using TestApi.DB;
@@ -30,18 +28,18 @@ public class MultiSourceApiRequestCacheTests : IClassFixture<WebApplicationFacto
         memoryDbContext.SaveChanges();
         var users = new List<User>()
         {
-            new()
+            new(DateTimeOffset.UtcNow)
             {
                 Id = "1",
                 Name = "anson1",
                 Age = 10
             },
-            new()
+            new(DateTimeOffset.UtcNow)
             {
                 Id = "2",
                 Name = "anson2"
             },
-            new()
+            new(DateTimeOffset.UtcNow)
             {
                 Id = "3",
                 Name = "anson3"
@@ -96,7 +94,7 @@ public class MultiSourceApiRequestCacheTests : IClassFixture<WebApplicationFacto
 
         var result1 = await resp1.Content.ReadAsStringAsync();
 
-        var resultForPost = await _httpClient.PutAsJsonAsync($"{baseUrl}?id=3", new User()
+        var resultForPost = await _httpClient.PutAsJsonAsync($"{baseUrl}?id=3", new User(DateTimeOffset.UtcNow)
         {
             Id = "3",
             Name = "anson33"
@@ -118,7 +116,7 @@ public class MultiSourceApiRequestCacheTests : IClassFixture<WebApplicationFacto
     [InlineData("/MultiSourceInMemory")]
     public async void CacheAndEvictOther(string baseUrl)
     {
-        await _httpClient.PostAsJsonAsync($"{baseUrl}", new User()
+        await _httpClient.PostAsJsonAsync($"{baseUrl}", new User(DateTimeOffset.UtcNow)
         {
             Id = "5",
             Name = "anson5"
@@ -162,6 +160,12 @@ public class MultiSourceApiRequestCacheTests : IClassFixture<WebApplicationFacto
         var user = await responseMessage.Content.ReadFromJsonAsync<User>();
 
         Assert.NotNull(user);
+
+        var responseMessage2 = await _httpClient.GetAsync($"{baseUrl}?id=1");
+        Assert.Equal(responseMessage2.StatusCode, HttpStatusCode.OK);
+
+        var userByCache = await responseMessage2.Content.ReadFromJsonAsync<User>();
+        Assert.True(userByCache.Time > 0);
 
         user.Name = "joe";
 
@@ -238,7 +242,7 @@ public class MultiSourceApiRequestCacheTests : IClassFixture<WebApplicationFacto
     {
         var responseMessage = await _httpClient.GetAsync($"{baseUrl}/get/two?id=123&name=anson1");
         Assert.Equal(responseMessage.StatusCode, HttpStatusCode.NoContent);
-        
+
         var responseMessage2 = await _httpClient.GetAsync($"{baseUrl}/get/two?id=123&name=anson1");
         Assert.Equal(responseMessage2.StatusCode, HttpStatusCode.NoContent);
     }

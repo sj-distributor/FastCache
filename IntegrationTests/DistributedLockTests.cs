@@ -50,7 +50,7 @@ public class DistributedLockTests : IClassFixture<WebApplicationFactory<Program>
             var stopwatch = new Stopwatch();
             stopwatch.Start();
             var responseMessage = await _httpClient.PostAsJsonAsync($"{baseUrl}?delayMs={delayMs}",
-                new User { Id = index.ToString(), Name = index.ToString() });
+                new User(DateTimeOffset.UtcNow) { Id = index.ToString(), Name = index.ToString() });
             stopwatch.Stop();
 
             var message = await responseMessage.Content.ReadAsStringAsync();
@@ -86,7 +86,7 @@ public class DistributedLockTests : IClassFixture<WebApplicationFactory<Program>
             var stopwatch = new Stopwatch();
             stopwatch.Start();
             var response = await _httpClient.PostAsJsonAsync($"{baseUrl}/add-with-cache?delayMs={delayMs}",
-                new User { Id = index.ToString(), Name = index.ToString() });
+                new User(DateTimeOffset.UtcNow) { Id = index.ToString(), Name = index.ToString() });
             stopwatch.Stop();
 
             var message = await response.Content.ReadAsStringAsync();
