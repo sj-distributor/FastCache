@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -5,6 +7,9 @@ using FastCache.Core.Driver;
 using FastCache.Core.Entity;
 using NewLife.Caching;
 using Newtonsoft.Json;
+using RedLockNet.SERedis;
+using RedLockNet.SERedis.Configuration;
+using StackExchange.Redis;
 
 namespace FastCache.Redis.Driver
 {
@@ -13,6 +18,10 @@ namespace FastCache.Redis.Driver
         private bool _canGetRedisClient = false;
 
         private readonly FullRedis _redisClient;
+
+        private RedLockFactory _redLockFactory;
+
+        private ConnectionMultiplexer _redisConnection;
 
         public FullRedis? GetRedisClient()
         {
@@ -24,6 +33,21 @@ namespace FastCache.Redis.Driver
             _canGetRedisClient = canGetRedisClient;
             _redisClient = new FullRedis();
             _redisClient.Init(connectionString);
+
+            _redisConnection = ConnectionMultiplexer.Connect(connectionString);
+
+            if (_redisConnection == null)
+                throw new InvalidOperationException();
+
+            SetupRedisLockFactory(new List<ConnectionMultiplexer>() { _redisConnection });
+        }
+
+        private void SetupRedisLockFactory(List<ConnectionMultiplexer> connectionMultiplexers)
+        {
+            var redLockMultiplexers = connectionMultiplexers
+                .Select(connectionMultiplexer => (RedLockMultiplexer)connectionMultiplexer).ToList();
+
+            _redLockFactory = RedLockFactory.Create(redLockMultiplexers);
         }
 
         public Task Set(string key, CacheItem cacheItem, long expire = 0)
