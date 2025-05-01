@@ -44,7 +44,7 @@ namespace FastCache.MultiSource.Attributes
         private readonly string _key;
         private readonly string _expression;
         private readonly Target _target;
-        private readonly long _expire;
+        private readonly TimeSpan _expire;
         public sealed override int Order { get; set; }
 
         private static readonly ConcurrentDictionary<Type, MethodInfo>
@@ -58,12 +58,18 @@ namespace FastCache.MultiSource.Attributes
                 .First(p => p.Name == "FromResult" && p.ContainsGenericParameters);
         }
 
-        public MultiSourceCacheableAttribute(string key, string expression, Target target, long expireSeconds = 0)
+
+        public MultiSourceCacheableAttribute(string key, string expression, Target target, long expireSeconds = 0) :
+            this(key, expression, target, TimeSpan.FromSeconds(expireSeconds))
+        {
+        }
+
+        public MultiSourceCacheableAttribute(string key, string expression, Target target, TimeSpan expire = default)
         {
             _key = key;
             _expression = expression;
             _target = target;
-            _expire = expireSeconds;
+            _expire = expire;
             Order = 2;
         }
 
@@ -155,7 +161,7 @@ namespace FastCache.MultiSource.Attributes
                 Value = value,
                 CreatedAt = DateTime.UtcNow.Ticks,
                 Expire =
-                    _expire > 0 ? DateTime.UtcNow.AddSeconds(_expire).Ticks : DateTime.UtcNow.AddYears(1).Ticks,
+                    _expire > TimeSpan.Zero ? DateTime.UtcNow.Add(_expire).Ticks : DateTime.UtcNow.AddYears(1).Ticks,
                 AssemblyName = returnType?.Assembly?.GetName()?.FullName ?? typeof(string).Assembly.FullName,
                 Type = returnType?.FullName ?? string.Empty,
             }, _expire);

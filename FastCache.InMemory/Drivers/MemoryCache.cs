@@ -31,9 +31,9 @@ namespace FastCache.InMemory.Drivers
             _dist = new ConcurrentDictionary<string, CacheItem>(Environment.ProcessorCount * 2, _maxCapacity);
         }
 
-        public Task Set(string key, CacheItem cacheItem, long _ = 0)
+        public Task<bool> Set(string key, CacheItem cacheItem, TimeSpan expire = default)
         {
-            if (_dist.ContainsKey(key)) return Task.CompletedTask;
+            if (_dist.ContainsKey(key)) return Task.FromResult(true);
             if (_dist.Count >= _maxCapacity)
             {
                 ReleaseCached();
@@ -46,7 +46,7 @@ namespace FastCache.InMemory.Drivers
 
             _dist.AddOrUpdate(key, cacheItem, (k, v) => cacheItem);
 
-            return Task.CompletedTask;
+            return Task.FromResult(true);
         }
 
         public Task<CacheItem> Get(string key)
@@ -118,10 +118,10 @@ namespace FastCache.InMemory.Drivers
             return Task.CompletedTask;
         }
 
-        public Task Delete(string key)
+        public Task<bool> Delete(string key)
         {
             _dist.TryRemove(key, out _, _delaySeconds);
-            return Task.CompletedTask;
+            return Task.FromResult(true);
         }
 
         private void ReleaseCached()

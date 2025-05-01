@@ -41,11 +41,11 @@ namespace FastCache.InMemory.Drivers
             InitBucket(_map, _buckets);
         }
 
-        public Task Set(string key, CacheItem cacheItem, long _ = 0)
+        public Task<bool> Set(string key, CacheItem cacheItem, TimeSpan timeSpan = default)
         {
             var bucket = GetBucket(HashKey(key));
 
-            if (bucket.ContainsKey(key)) return Task.CompletedTask;
+            if (bucket.ContainsKey(key)) return Task.FromResult(true);
             if (bucket.Count >= _bucketMaxCapacity)
             {
                 ReleaseCached(bucket);
@@ -58,7 +58,7 @@ namespace FastCache.InMemory.Drivers
 
             bucket.AddOrUpdate(key, cacheItem, (k, v) => cacheItem);
 
-            return Task.CompletedTask;
+            return Task.FromResult(true);
         }
 
         public Task<CacheItem> Get(string key)
@@ -127,10 +127,11 @@ namespace FastCache.InMemory.Drivers
             return Task.CompletedTask;
         }
 
-        public Task Delete(string key)
+        public Task<bool> Delete(string key)
         {
             GetBucket(HashKey(key)).TryRemove(key, out _, _delaySeconds);
-            return Task.CompletedTask;
+
+            return Task.FromResult(true);
         }
 
         private void InitBucket(Dictionary<uint, ConcurrentDictionary<string, CacheItem>> map, uint buckets)

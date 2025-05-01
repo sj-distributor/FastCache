@@ -1,6 +1,6 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
-using NewLife.Caching;
 
 namespace FastCache.Redis.Driver
 {
@@ -11,50 +11,82 @@ namespace FastCache.Redis.Driver
         /// </summary>
         /// <param name="lockKey">锁的键名</param>
         /// <param name="operation">需要执行的异步操作</param>
-        /// <param name="retryCount">重试次数，默认为3次</param>
-        /// <param name="initialRetryDelayMs">初始重试等待时间（毫秒），默认为100毫秒</param>
-        /// <param name="maxRetryDelayMs">最大重试等待时间（毫秒），默认为1000毫秒</param>
-        /// <param name="msTimeout">锁的获取超时时间（毫秒），默认为100毫秒</param>
-        /// <param name="msExpire">锁的过期时间（毫秒），默认为1000毫秒</param>
+        /// <param name="retryTime"></param>
         /// <param name="throwOnFailure">失败时是否抛出异常</param>
+        /// <param name="expiryTime"></param>
+        /// <param name="waitTime"></param>
+        /// <param name="cancellationToken"></param>
         /// <returns>操作成功返回 true，否则返回 false</returns>
         public async Task<bool> ExecuteWithRedisLockAsync(string lockKey,
             Func<Task> operation,
-            // int retryCount = 3,
-            // int initialRetryDelayMs = 100,
-            // int maxRetryDelayMs = 1000,
-            int msTimeout = 600,
-            int msExpire = 3000,
-            bool throwOnFailure = false)
+            TimeSpan expiryTime = default,
+            TimeSpan waitTime = default,
+            TimeSpan retryTime = default,
+            bool throwOnFailure = false,
+            CancellationToken cancellationToken = default)
         {
-            // int currentRetry = 0;
-            // int retryDelay = initialRetryDelayMs;
+            // 设置合理的默认值（如果未显式指定）
+            // expiryTime	30秒	- 足够覆盖大多数业务操作<br>- Redis官方推荐锁有效期应大于业务执行时间
+            // waitTime	10秒	- 平衡用户体验和系统资源<br>- 超过该时间可认为系统繁忙
+            // retryTime	200毫秒	- Redis性能考量（网络往返+命令执行）<br>- AWS建议的退避基准值
+            expiryTime = expiryTime == default ? TimeSpan.FromSeconds(30) : expiryTime;
+            waitTime = waitTime == default ? TimeSpan.FromSeconds(10) : waitTime;
+            retryTime = retryTime == default ? TimeSpan.FromMilliseconds(200) : retryTime;
 
-            // while (currentRetry < retryCount)
-            // {
-            // 尝试获取分布式锁
-            using var redisLock = _redisClient.AcquireLock(lockKey, msTimeout, msExpire, throwOnFailure);
+            await using var redLock = await _redLockFactory
+                .CreateLockAsync(lockKey, expiryTime, waitTime, retryTime, cancellationToken)
+                .ConfigureAwait(false);
 
-            if (redisLock != null)
+            if (!redLock.IsAcquired)
             {
-                try
+                if (throwOnFailure)
                 {
-                    // 执行传入的操作
-                    await operation();
-                    return true;
+                    throw new InvalidOperationException(
+                        "Failed to acquire the distributed lock after multiple attempts.");
                 }
-                catch (Exception ex)
-                {
-                    // 记录操作异常
-                    // Console.WriteLine($"执行过程中发生错误: {ex.Message}");
-                    if (throwOnFailure)
-                    {
-                        throw;
-                    }
 
-                    return false;
-                }
+                return false;
             }
+
+            try
+            {
+                await operation();
+                return true;
+            }
+            catch (Exception _)
+            {
+                if (throwOnFailure)
+                {
+                    throw;
+                }
+
+                return false;
+            }
+
+
+            // 尝试获取分布式锁
+            // using var redisLock = _redisClient.AcquireLock(lockKey, msTimeout, msExpire, throwOnFailure);
+            //
+            // if (redisLock != null)
+            // {
+            //     try
+            //     {
+            //         // 执行传入的操作
+            //         await operation();
+            //         return true;
+            //     }
+            //     catch (Exception ex)
+            //     {
+            //         // 记录操作异常
+            //         // Console.WriteLine($"执行过程中发生错误: {ex.Message}");
+            //         if (throwOnFailure)
+            //         {
+            //             throw;
+            //         }
+            //
+            //         return false;
+            //     }
+            // }
 
             //     currentRetry++;
             //
@@ -67,12 +99,12 @@ namespace FastCache.Redis.Driver
             // }
 
             // 如果在所有重试中都未获取锁，则返回失败
-            if (throwOnFailure)
-            {
-                throw new InvalidOperationException("Failed to acquire the distributed lock after multiple attempts.");
-            }
+            // if (throwOnFailure)
+            // {
+            //     throw new InvalidOperationException("Failed to acquire the distributed lock after multiple attempts.");
+            // }
 
-            return false;
+            // return false;
         }
     }
 }
