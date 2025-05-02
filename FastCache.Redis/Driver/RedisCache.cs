@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using FastCache.Core.Driver;
 using FastCache.Core.Entity;
+using FastCache.Core.Extensions;
 using Newtonsoft.Json;
 using RedLockNet.SERedis;
 using RedLockNet.SERedis.Configuration;
@@ -123,14 +124,40 @@ namespace FastCache.Redis.Driver
             return Task.FromResult(true);
         }
 
+        public async Task<long> BatchDeleteKeysWithPipelineAsync(
+            IEnumerable<string> keys,
+            int batchSize = 200)
+        {
+            long totalDeleted = 0;
 
-        public Task Delete(string key, string prefix)
+            var db = _redisConnection.GetDatabase();
+
+            foreach (var chunk in keys.Chunk(batchSize))
+            {
+                // 1. 创建批处理对象（管道）
+                var batch = db.CreateBatch();
+
+                var enumerable = chunk as string[] ?? chunk.ToArray();
+                var redisKeys = Array.ConvertAll(enumerable, key => (RedisKey)key);
+
+                var keyDeleteResult = batch.KeyDeleteAsync(redisKeys);
+
+                // 3. 触发批量发送（所有命令一次性发往Redis）
+                batch.Execute();
+
+                totalDeleted += await keyDeleteResult;
+            }
+
+            return totalDeleted;
+        }
+
+        public async Task Delete(string key, string prefix)
         {
             if (string.IsNullOrWhiteSpace(key))
                 throw new ArgumentException("Key cannot be null or empty", nameof(key));
-            
+
             var db = _redisConnection.GetDatabase();
-            
+
             if (key.Contains('*'))
             {
                 string[] list = { };
@@ -138,7 +165,8 @@ namespace FastCache.Redis.Driver
                 {
                     if (string.IsNullOrEmpty(prefix))
                     {
-                        // list = _redisClient.Search(key, 1000).ToArray();
+                        list = (await FuzzySearchAsync(new AdvancedSearchModel() { Pattern = key, PageSize = 1000 }))
+                            .ToArray();
                     }
                     else
                     {
@@ -152,28 +180,28 @@ namespace FastCache.Redis.Driver
                             key = key[..^1];
                         }
 
-                        // list = string.IsNullOrEmpty(key)
-                        //     ? _redisClient.Search($"{prefix}*", 1000).ToArray()
-                        //     : _redisClient.Search($"{prefix}*", 1000).Where(x => x.Contains(key)).ToArray();
+                        list = string.IsNullOrEmpty(key)
+                            ? (await FuzzySearchAsync(new AdvancedSearchModel()
+                                { Pattern = $"{prefix}*", PageSize = 1000 })).ToArray()
+                            : (await FuzzySearchAsync(new AdvancedSearchModel()
+                                { Pattern = $"{prefix}*", PageSize = 1000 })).Where(x => x.Contains(key)).ToArray();
                     }
                 }
                 else
                 {
-                    // _redisClient.Remove(key);
+                    await db.KeyDeleteAsync(key);
                 }
 
                 if (list?.Length > 0)
                 {
-                    // _redisClient.Remove(list);
+                    await BatchDeleteKeysWithPipelineAsync(list);
                 }
             }
             else
             {
                 var removeKey = string.IsNullOrEmpty(prefix) ? key : $"{prefix}:{key}";
-                // _redisClient.Remove(removeKey);
+                await db.KeyDeleteAsync(removeKey);
             }
-
-            return Task.CompletedTask;
         }
     }
 }

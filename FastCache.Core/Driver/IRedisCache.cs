@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using FastCache.Core.Entity;
@@ -13,12 +14,17 @@ namespace FastCache.Core.Driver
 
         RedLockFactory GetRedLockFactory();
 
-        Task<bool> ExecuteWithRedisLockAsync(string lockKey,
+        Task<DistributedLockResult> ExecuteWithRedisLockAsync(string lockKey,
             Func<Task> operation,
-            TimeSpan expiryTime = default,
-            TimeSpan waitTime = default,
-            TimeSpan retryTime = default,
-            bool throwOnFailure = false,
+            DistributedLockOptions? options = null,
             CancellationToken cancellationToken = default);
+
+        Task<List<string>> FuzzySearchAsync(
+            AdvancedSearchModel advancedSearchModel,
+            CancellationToken cancellationToken = default);
+
+        Task<long> BatchDeleteKeysWithPipelineAsync(
+            IEnumerable<string> keys,
+            int batchSize = 200);
     }
 }

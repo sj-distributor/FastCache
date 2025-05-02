@@ -3,9 +3,11 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using FastCache.Core.Entity;
+using FastCache.Core.Enums;
 using FastCache.Redis.Driver;
 using Xunit;
 using Xunit.Abstractions;
@@ -14,8 +16,22 @@ namespace UnitTests;
 
 public partial class RedisCacheTests(ITestOutputHelper testOutputHelper)
 {
+    private readonly ITestOutputHelper _testOutputHelper = testOutputHelper;
+
     private readonly RedisCache _redisClient =
         new("localhost:6379,syncTimeout=5000,connectTimeout=5000,responseTimeout=5000", true);
+
+    private class Setting
+    {
+        public string Name { get; set; }
+    }
+
+    private class User
+    {
+        public string Name { get; set; }
+
+        public List<Setting> Settings { get; set; }
+    }
 
     [Theory]
     [InlineData("anson", "18", "18")]
@@ -28,14 +44,166 @@ public partial class RedisCacheTests(ITestOutputHelper testOutputHelper)
             AssemblyName = value.GetType().Assembly.GetName().Name,
             Type = value.GetType().FullName
         }, TimeSpan.FromSeconds(20));
-        
+
         var s = await _redisClient.Get(key);
         Assert.Equal(s.Value, result);
     }
 
-    public async Task TestRedisCacheCanGet()
+    [Fact]
+    public async Task GetAfterSettingComplexObjectShouldRetrieveOriginalValues()
     {
-        
+        var key = "TestRedisCacheCanGet";
+
+        var value = new User()
+        {
+            Name = "23131",
+            Settings =
+            [
+                new Setting
+                {
+                    Name = "fas231"
+                }
+            ]
+        };
+
+        await _redisClient.Set(key, new CacheItem()
+        {
+            Value = value,
+            AssemblyName = value.GetType().Assembly.GetName().Name,
+            Type = value.GetType().FullName
+        }, TimeSpan.FromSeconds(20));
+
+        var s = await _redisClient.Get(key);
+
+        Assert.Equal(((User)s.Value).Name, value.Name);
+        Assert.Single(((User)s.Value).Settings);
+        Assert.Equal("fas231", ((User)s.Value).Settings.First().Name);
+    }
+
+    [Fact]
+    public async Task TestFuzzySearchAsync()
+    {
+        var key = "TestFuzzySearchAsync";
+        var value = "123456";
+
+        await _redisClient.Set(key, new CacheItem()
+        {
+            Value = value,
+            AssemblyName = value.GetType().Assembly.GetName().Name,
+            Type = value.GetType().FullName
+        }, TimeSpan.FromMinutes(20));
+
+        var result = await _redisClient.FuzzySearchAsync(new AdvancedSearchModel()
+        {
+            PageSize = 1000,
+            Pattern = "Test*"
+        });
+
+        Assert.True(result.Count > 0);
+        Assert.Contains(key, result);
+
+        await _redisClient.Delete(key);
+    }
+
+    [Theory]
+    // 基础匹配场景
+    [InlineData(100, "Order_", "Order_1*", 10)] // 前缀+数字通配
+    [InlineData(500, "Product_", "Product_*123", 20)] // 后缀固定值匹配
+    [InlineData(200, "User_", "User_[0-9]??", 15)] // 字符集+占位符组合
+
+    // 新增关键测试场景（含特殊字符和边界情况）
+    [InlineData(50, "Temp\\*Key_", "Temp\\*Key_*", 5)] // 转义字符测试
+    [InlineData(300, "IDX_", "IDX_[A-F][0-9]", 30)] // 双字符集组合
+    [InlineData(150, "Log_", "Log_[1-9][a-z]", 25)] // 数字范围+字母范围
+    [InlineData(0, "", "*", 3)] // 空前缀全通配
+    [InlineData(80, "Test?", "Test?_[X-Z]", 8)] // key本身含问号
+    [InlineData(120, "[Demo]_", "[Demo]_*#*", 12)] // key含方括号
+
+    // Redis实际业务典型场景
+    [InlineData(1000, "Session:", "Session:*:Token", 50)] // Redis常见会话模式  
+    [InlineData(600, "{Cache}:Item:", "{Cache}:Item:*:Ver", 60)] // Hash tag模式
+    [InlineData(400, "@Event@_", "@Event@_*-Log", 40)] // 特殊符号包裹
+
+    // Unicode和多语言支持
+    [InlineData(200, "用户_", "用户_[张三李四]订单*", 20)] // UTF-8字符集  
+    [InlineData(70, "商品-", "商品-[가-힣]*번호", 7)] // Hangul字母范围
+    public async Task FuzzySearchWithParametersAsync(
+        int totalRecords,
+        string keyPrefix,
+        string searchPattern,
+        int expectedMatches)
+    {
+        // Arrange - 准备带明确匹配规则的测试数据
+        var insertedKeys = new List<string>();
+        var random = new Random();
+
+        var patternGeneratorUtil = new RedisKeyPatternGeneratorUtil();
+
+        // 生成可预测的匹配key（前N条为符合搜索条件的key）
+        for (var i = 0; i < totalRecords; i++)
+        {
+            var shouldMatch = i < expectedMatches;
+
+            // 构造可匹配的key（根据searchPattern反向生成）
+            var key = shouldMatch
+                ? patternGeneratorUtil.GenerateMatchingKey(searchPattern, i)
+                : $"{keyPrefix}:not_match:{Guid.NewGuid()}"; // 不匹配的随机key
+
+            var value = $"Value_{random.Next(1000)}";
+
+            await _redisClient.Set(key, new CacheItem()
+            {
+                Value = value,
+                AssemblyName = value.GetType().Assembly.GetName().Name,
+                Type = value.GetType().FullName
+            }, TimeSpan.FromSeconds(20));
+
+            insertedKeys.Add(key);
+        }
+
+        try
+        {
+            // Act - 执行模糊查询
+            var matchedKeys = await _redisClient.FuzzySearchAsync(new AdvancedSearchModel()
+            {
+                PageSize = totalRecords * 2, // 确保能返回所有可能结果
+                Pattern = searchPattern
+            });
+
+            // Assert - 验证结果
+            Assert.NotNull(matchedKeys);
+
+            // 验证返回数量是否符合预期
+            Assert.Equal(expectedMatches, matchedKeys.Count);
+
+            foreach (var key in matchedKeys)
+            {
+                // 验证1：Key必须符合Redis通配符规则
+                Assert.True(MatchesRedisPattern(key, searchPattern),
+                    $"Key '{key}' match pattern '{searchPattern}'");
+
+                // 验证2：Key必须在我们插入的key集合中
+                Assert.Contains(key, insertedKeys);
+            }
+        }
+        catch (Exception _)
+        {
+            await _redisClient.BatchDeleteKeysWithPipelineAsync(insertedKeys);
+        }
+
+        // 辅助方法：Redis通配符匹配逻辑
+        bool MatchesRedisPattern(string key, string pattern)
+        {
+            var regexPattern = "^" + Regex.Escape(pattern)
+                .Replace(@"\*", ".*")
+                .Replace(@"\?", ".")
+                .Replace(@"\[", "[")
+                .Replace(@"\]", "]") + "$";
+            return Regex.IsMatch(key, regexPattern);
+        }
+
+        var deletedCount = await _redisClient.BatchDeleteKeysWithPipelineAsync(insertedKeys);
+        Assert.True(deletedCount == insertedKeys.Count);
     }
 
     [Theory]
@@ -82,7 +250,7 @@ public partial class RedisCacheTests(ITestOutputHelper testOutputHelper)
             Value = value,
             AssemblyName = value.GetType().Assembly.GetName().Name,
             Type = value.GetType().FullName
-        });
+        }, TimeSpan.FromSeconds(10));
         await _redisClient.Delete("anson*", prefix);
         var s = await _redisClient.Get(key);
         Assert.Equal(s.Value, result);
@@ -306,11 +474,11 @@ public partial class RedisCacheTests(ITestOutputHelper testOutputHelper)
         var lockResult = new ConcurrentDictionary<string, bool>();
 
         // 定义一个异步操作，用于模拟不同客户端争抢锁
-        async Task<bool> TrySetAsyncLock(string v)
+        async Task<DistributedLockResult> TrySetAsyncLock(string v)
         {
             var stopwatch = new Stopwatch();
             stopwatch.Start();
-            var isLock = await _redisClient.ExecuteWithRedisLockAsync(
+            var distributedLockResult = await _redisClient.ExecuteWithRedisLockAsync(
                 $"lock:delete:{fullKey}", async () =>
                 {
                     await Task.Delay(delayMs);
@@ -320,16 +488,20 @@ public partial class RedisCacheTests(ITestOutputHelper testOutputHelper)
                         AssemblyName = value.GetType().Assembly.GetName().Name,
                         Type = value.GetType().FullName
                     });
-                }, waitTime: lockWaitTime, retryTime: lockRetryTime, cancellationToken: CancellationToken.None);
+                }, new DistributedLockOptions()
+                {
+                    WaitTime = lockWaitTime,
+                    RetryInterval = lockRetryTime
+                }, cancellationToken: CancellationToken.None);
 
             stopwatch.Stop();
 
             testOutputHelper.WriteLine(
-                $"{v} - time : {stopwatch.ElapsedMilliseconds} lock: {isLock}, ticks: {DateTime.UtcNow.Ticks}");
+                $"{v} - time : {stopwatch.ElapsedMilliseconds} lock: {distributedLockResult.IsSuccess}, ticks: {DateTime.UtcNow.Ticks}");
 
-            lockResult.TryAdd(v, isLock);
+            lockResult.TryAdd(v, distributedLockResult.Status == LockStatus.LockNotAcquired);
 
-            return isLock;
+            return distributedLockResult;
         }
 
         var tasks = new List<Task>();
