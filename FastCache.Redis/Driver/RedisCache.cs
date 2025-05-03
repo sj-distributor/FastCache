@@ -15,18 +15,9 @@ namespace FastCache.Redis.Driver
 {
     public partial class RedisCache : IRedisCache
     {
-        // private bool _canGetRedisClient = false;
-
-        // private readonly FullRedis _redisClient;
-
         private RedLockFactory _redLockFactory;
 
         private ConnectionMultiplexer _redisConnection;
-
-        // public FullRedis? GetRedisClient()
-        // {
-        //     return _canGetRedisClient ? _redisClient : null;
-        // }
 
         public ConnectionMultiplexer GetConnectionMultiplexer()
         {
@@ -38,26 +29,26 @@ namespace FastCache.Redis.Driver
             return _redLockFactory;
         }
 
-        public RedisCache(string connectionString, bool canGetRedisClient = false)
+        public RedisCache(string connectionString, RedisCacheOptions? redisCacheOptions = null)
         {
-            // _canGetRedisClient = canGetRedisClient;
-            // _redisClient = new FullRedis();
-            // _redisClient.Init(connectionString);
-
+            var option = redisCacheOptions ?? new RedisCacheOptions();
             _redisConnection = ConnectionMultiplexer.Connect(connectionString);
 
             if (_redisConnection == null)
                 throw new InvalidOperationException();
 
-            SetupRedisLockFactory(new List<ConnectionMultiplexer>() { _redisConnection });
+            SetupRedisLockFactory(new List<ConnectionMultiplexer>() { _redisConnection }, option);
         }
 
-        private void SetupRedisLockFactory(List<ConnectionMultiplexer> connectionMultiplexers)
+        private void SetupRedisLockFactory(List<ConnectionMultiplexer> connectionMultiplexers,
+            RedisCacheOptions redisCacheOptions)
         {
             var redLockMultiplexers = connectionMultiplexers
                 .Select(connectionMultiplexer => (RedLockMultiplexer)connectionMultiplexer).ToList();
 
-            _redLockFactory = RedLockFactory.Create(redLockMultiplexers);
+            _redLockFactory = RedLockFactory.Create(redLockMultiplexers,
+                new RedLockRetryConfiguration(retryCount: redisCacheOptions.QuorumRetryCount,
+                    retryDelayMs: redisCacheOptions.QuorumRetryDelayMs));
         }
 
         public async Task<bool> Set(string key, CacheItem cacheItem, TimeSpan expire = default)
@@ -145,7 +136,9 @@ namespace FastCache.Redis.Driver
                 // 3. 触发批量发送（所有命令一次性发往Redis）
                 batch.Execute();
 
-                totalDeleted += await keyDeleteResult;
+                var resultCount = await keyDeleteResult;
+
+                totalDeleted += resultCount;
             }
 
             return totalDeleted;

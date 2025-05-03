@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using FastCache.Core.Driver;
 using FastCache.Core.Entity;
-using FastCache.InMemory.Enum;
+using FastCache.Core.Enums;
 using FastCache.InMemory.Extension;
 using Newtonsoft.Json;
 

@@ -22,7 +22,7 @@ namespace FastCache.Redis.Driver
             CancellationToken cancellationToken = default)
         {
             var opts = options ?? new DistributedLockOptions();
-
+            
             await using var redLock = await _redLockFactory
                 .CreateLockAsync(lockKey, opts.ExpiryTime, opts.WaitTime, opts.RetryInterval, cancellationToken)
                 .ConfigureAwait(false);
