@@ -116,32 +116,37 @@ public partial class RedisCacheTests(ITestOutputHelper testOutputHelper)
         await _redisClient.Delete(key);
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="totalRecords"></param>
+    /// <param name="searchPattern"></param>
+    /// <param name="expectedMatches">期待的查找到的值，目前生成的key会有可能重复，在测试中会在进行一查找生成的匹配key的值</param>
     [Theory]
     // 基础匹配场景
-    [InlineData(100, "Order_", "Order_1*", 10)] // 前缀+数字通配
-    [InlineData(500, "Product_", "Product_*123", 20)] // 后缀固定值匹配
-    [InlineData(200, "User_", "User_[0-9]??", 15)] // 字符集+占位符组合
+    [InlineData(5, "Order_1*", 5)] // 前缀+数字通配
+    [InlineData(500, "Product_*123", 5)] // 后缀固定值匹配
+    [InlineData(200, "User_[0-9]??", 5)] // 字符集+占位符组合
 
     // 新增关键测试场景（含特殊字符和边界情况）
-    [InlineData(50, "Temp\\*Key_", "Temp\\*Key_*", 5)] // 转义字符测试
-    [InlineData(300, "IDX_", "IDX_[A-F][0-9]", 5)] // 双字符集组合
-    [InlineData(150, "Log_", "Log_[1-9][a-z]", 5)] // 数字范围+字母范围
-    [InlineData(100, "", "*", 100)] // 空前缀全通配
-    [InlineData(80, "Test?", "Test?_[X-Z]", 5)] // key本身含问号
-    [InlineData(120, "[Demo]_", "[Demo]_*#*", 0)] // key含方括号
-    [InlineData(120, "[Demo]_", "[Demo]_*#*", 12)] // key含方括号
+    [InlineData(50, "Temp\\*Key_*", 5)] // 转义字符测试
+    [InlineData(300, "IDX_[A-F][0-9]", 5)] // 双字符集组合
+    [InlineData(150, "Log_[1-9][a-z]", 5)] // 数字范围+字母范围
+    [InlineData(5, "*", 5)] // 空前缀全通配
+    [InlineData(80, "Test?_[A-Z]", 5)] // key本身含问号
+    [InlineData(120, "[Demo]_*#*", 0)] // key含方括号
+    [InlineData(120, "[Demo]_*#*", 5)] // key含方括号
 
     // Redis实际业务典型场景
-    [InlineData(1000, "Session:", "Session:*:Token", 50)] // Redis常见会话模式  
-    [InlineData(600, "{Cache}:Item:", "{Cache}:Item:*:Ver", 60)] // Hash tag模式
-    [InlineData(400, "@Event@_", "@Event@_*-Log", 40)] // 特殊符号包裹
+    [InlineData(1000, "Session:*:Token", 5)] // Redis常见会话模式  
+    [InlineData(600, "{Cache}:Item:*:Ver", 5)] // Hash tag模式
+    [InlineData(400, "@Event@_*-Log", 5)] // 特殊符号包裹
 
     // Unicode和多语言支持
-    [InlineData(200, "用户_", "用户_[张三李四]订单*", 0)] // UTF-8字符集  
-    [InlineData(70, "商品-", "商品-[가-힣]*번호", 7)] // Hangul字母范围
+    [InlineData(200, "用户_[张三李四]订单*", 0)] // UTF-8字符集  
+    [InlineData(70, "商品-[가-힣]*번호", 7)] // Hangul字母范围
     public async Task FuzzySearchWithParametersAsync(
         int totalRecords,
-        string keyPrefix,
         string searchPattern,
         int expectedMatches)
     {
@@ -159,7 +164,7 @@ public partial class RedisCacheTests(ITestOutputHelper testOutputHelper)
             // 构造可匹配的key（根据searchPattern反向生成）
             var key = shouldMatch
                 ? patternGeneratorUtil.GenerateRedisCompatibleKey(searchPattern, i)
-                : $"{keyPrefix}:not_match:{Guid.NewGuid()}"; // 不匹配的随机key
+                : $"{nameof(FuzzySearchWithParametersAsync)}:not_match:{Guid.NewGuid()}"; // 不匹配的随机key
 
             var value = $"Value_{random.Next(1000)}";
 
@@ -175,7 +180,9 @@ public partial class RedisCacheTests(ITestOutputHelper testOutputHelper)
             insertedKeys.Add(key);
         }
 
-        insertedKeys = insertedKeys.Distinct().ToList();
+        var insertedDictKeys = insertedKeys.Distinct().ToList();
+
+        var generateMatchedKeys = insertedDictKeys.Where(x => !x.Contains("not_match")).ToList();
 
         try
         {
@@ -190,7 +197,7 @@ public partial class RedisCacheTests(ITestOutputHelper testOutputHelper)
             Assert.NotNull(matchedKeys);
 
             // 验证返回数量是否符合预期
-            Assert.Equal(expectedMatches, matchedKeys.Count);
+            Assert.Equal(generateMatchedKeys.Count, matchedKeys.Count);
 
             foreach (var key in matchedKeys)
             {
@@ -205,8 +212,8 @@ public partial class RedisCacheTests(ITestOutputHelper testOutputHelper)
             throw;
         }
 
-        var deletedCount2 = await _redisClient.BatchDeleteKeysWithPipelineAsync(insertedKeys);
-        Assert.True(deletedCount2 == insertedKeys.Count);
+        var deletedCountByNormalFlow = await _redisClient.BatchDeleteKeysWithPipelineAsync(insertedKeys);
+        Assert.True(deletedCountByNormalFlow == insertedKeys.Count);
     }
 
     [Theory]
