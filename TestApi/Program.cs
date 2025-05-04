@@ -1,6 +1,7 @@
 using AspectCore.Extensions.DependencyInjection;
 using FastCache.InMemory.Setup;
 using FastCache.MultiSource.Setup;
+using StackExchange.Redis;
 using TestApi.DB;
 using TestApi.Service;
 
@@ -17,8 +18,15 @@ builder.Host.UseServiceProviderFactory(new DynamicProxyServiceProviderFactory())
 builder.Services.AddMvc().AddControllersAsServices();
 
 builder.Services.AddMultiSourceCache(
-    "localhost:6379,syncTimeout=5000,connectTimeout=5000,responseTimeout=5000" // "Expire=3600" redis global timeout 
+    new ConfigurationOptions()
+    {
+        EndPoints = { "localhost:6379" },
+        SyncTimeout = 5000,
+        ConnectTimeout = 5000,
+        ResponseTimeout = 5000
+    } // "Expire=3600" redis global timeout
 );
+
 
 // builder.Services.AddMultiBucketsInMemoryCache();
 builder.Services.AddInMemoryCache();

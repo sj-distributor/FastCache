@@ -4,6 +4,7 @@ using FastCache.Core.Entity;
 using FastCache.InMemory.Drivers;
 using FastCache.Redis.Driver;
 using Microsoft.Extensions.DependencyInjection;
+using StackExchange.Redis;
 
 namespace FastCache.MultiSource.Setup
 {
@@ -11,7 +12,7 @@ namespace FastCache.MultiSource.Setup
     {
         public static void AddMultiSourceCache(
             this IServiceCollection services,
-            string connectionString,
+            ConfigurationOptions configurationOptions,
             RedisCacheOptions? redisCacheOptions = null,
             MemoryCacheOptions? memoryCacheOptions = null
         )
@@ -19,7 +20,7 @@ namespace FastCache.MultiSource.Setup
             var memoryCacheOption = memoryCacheOptions ?? new MemoryCacheOptions();
             var redisCacheOption = redisCacheOptions ?? new RedisCacheOptions();
 
-            services.AddSingleton<IRedisCache>(new RedisCache(connectionString, redisCacheOption));
+            services.AddSingleton<IRedisCache>(new RedisCache(configurationOptions, redisCacheOption));
             services.AddSingleton<IMemoryCache>(new MemoryCache(memoryCacheOption.MaxCapacity,
                 memoryCacheOption.MemoryPolicy, memoryCacheOption.CleanUpPercentage));
         }

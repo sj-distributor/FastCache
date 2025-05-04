@@ -17,7 +17,7 @@ namespace FastCache.Redis.Driver
     {
         private RedLockFactory _redLockFactory;
 
-        private ConnectionMultiplexer _redisConnection;
+        private readonly ConnectionMultiplexer _redisConnection;
 
         public ConnectionMultiplexer GetConnectionMultiplexer()
         {
@@ -29,11 +29,15 @@ namespace FastCache.Redis.Driver
             return _redLockFactory;
         }
 
-        public RedisCache(string connectionString, RedisCacheOptions? redisCacheOptions = null)
+        public RedisCache(ConfigurationOptions configuration, RedisCacheOptions? redisCacheOptions = null)
         {
+            if (configuration == null)
+                throw new ArgumentNullException();
+            
             var option = redisCacheOptions ?? new RedisCacheOptions();
-            _redisConnection = ConnectionMultiplexer.Connect(connectionString);
-
+            
+            _redisConnection = ConnectionMultiplexer.Connect(configuration);
+            
             if (_redisConnection == null)
                 throw new InvalidOperationException();
 

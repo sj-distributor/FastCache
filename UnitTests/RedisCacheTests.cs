@@ -1,14 +1,10 @@
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Text.RegularExpressions;
-using System.Threading;
 using System.Threading.Tasks;
 using FastCache.Core.Entity;
-using FastCache.Core.Enums;
 using FastCache.Redis.Driver;
+using StackExchange.Redis;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -16,17 +12,34 @@ namespace UnitTests;
 
 public partial class RedisCacheTests(ITestOutputHelper testOutputHelper)
 {
-    private readonly RedisCache _redisClient =
-        new("localhost:6379,syncTimeout=5000,connectTimeout=5000,responseTimeout=5000");
+    private readonly RedisCache _redisClient = new(new ConfigurationOptions()
+    {
+        EndPoints = { "localhost:6379" },
+        SyncTimeout = 5000,
+        ConnectTimeout = 5000,
+        ResponseTimeout = 5000
+    });
 
     private readonly RedisCache _redisClient2 =
-        new("localhost:6379,syncTimeout=5000,connectTimeout=5000,responseTimeout=5000", new RedisCacheOptions()
+        new(new ConfigurationOptions()
+        {
+            EndPoints = { "localhost:6379" },
+            SyncTimeout = 5000,
+            ConnectTimeout = 5000,
+            ResponseTimeout = 5000
+        }, new RedisCacheOptions()
         {
             QuorumRetryCount = 1,
         });
 
     private readonly RedisCache _redisClient3 =
-        new("localhost:6379,syncTimeout=5000,connectTimeout=5000,responseTimeout=5000", new RedisCacheOptions()
+        new(new ConfigurationOptions()
+        {
+            EndPoints = { "localhost:6379" },
+            SyncTimeout = 5000,
+            ConnectTimeout = 5000,
+            ResponseTimeout = 5000
+        }, new RedisCacheOptions()
         {
             QuorumRetryCount = 1,
             QuorumRetryDelayMs = 200
@@ -42,6 +55,12 @@ public partial class RedisCacheTests(ITestOutputHelper testOutputHelper)
         public string Name { get; set; }
 
         public List<Setting> Settings { get; set; }
+    }
+
+    [Fact]
+    public void ConstructorWhenConfigurationIsNullThrowsArgumentNullException()
+    {
+        Assert.Throws<ArgumentNullException>(() => { _ = new RedisCache(null); });
     }
 
     [Theory]
