@@ -63,6 +63,18 @@ public partial class RedisCacheTests(ITestOutputHelper testOutputHelper)
         Assert.Throws<ArgumentNullException>(() => { _ = new RedisCache(null); });
     }
 
+    [Fact]
+    public void ConstructorWhenNoEndpointsConfiguredThrowsArgumentException()
+    {
+        Assert.Throws<ArgumentException>(() =>
+        {
+            _ = new RedisCache(new ConfigurationOptions()
+            {
+                EndPoints = { }
+            });
+        });
+    }
+
     [Theory]
     [InlineData("anson", "18", "18")]
     [InlineData("anson1", "19", "19")]

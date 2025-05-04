@@ -32,12 +32,21 @@ namespace FastCache.Redis.Driver
         public RedisCache(ConfigurationOptions configuration, RedisCacheOptions? redisCacheOptions = null)
         {
             if (configuration == null)
-                throw new ArgumentNullException();
-            
+                throw new ArgumentNullException(
+                    paramName: nameof(configuration),
+                    message: "Redis configuration cannot be null. Please provide valid ConfigurationOptions");
+
+            if (configuration.EndPoints.Count == 0)
+            {
+                throw new ArgumentException(
+                    message: "At least one Redis endpoint must be configured",
+                    paramName: nameof(configuration));
+            }
+
             var option = redisCacheOptions ?? new RedisCacheOptions();
-            
+
             _redisConnection = ConnectionMultiplexer.Connect(configuration);
-            
+
             if (_redisConnection == null)
                 throw new InvalidOperationException();
 
