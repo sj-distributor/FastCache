@@ -214,6 +214,8 @@ public partial class RedisCacheTests(ITestOutputHelper testOutputHelper)
 
         var deletedCountByNormalFlow = await _redisClient.BatchDeleteKeysWithPipelineAsync(insertedKeys);
         Assert.True(deletedCountByNormalFlow == insertedKeys.Count);
+
+        await Task.Delay(TimeSpan.FromSeconds(2));
     }
 
     [Theory]
