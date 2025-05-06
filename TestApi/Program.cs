@@ -21,10 +21,15 @@ builder.Services.AddMultiSourceCache(
     new ConfigurationOptions()
     {
         EndPoints = { "localhost:6379" },
+        ReconnectRetryPolicy = new ExponentialRetry(
+            deltaBackOffMilliseconds: 1000, // 初始延迟 1s
+            maxDeltaBackOffMilliseconds: 30000 // 最大延迟 30s
+        ),
+        AbortOnConnectFail = false,
         SyncTimeout = 5000,
         ConnectTimeout = 5000,
         ResponseTimeout = 5000
-    } // "Expire=3600" redis global timeout
+    }
 );
 
 
