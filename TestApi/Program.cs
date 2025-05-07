@@ -1,4 +1,5 @@
 using AspectCore.Extensions.DependencyInjection;
+using FastCache.Core.Entity;
 using FastCache.InMemory.Setup;
 using FastCache.MultiSource.Setup;
 using StackExchange.Redis;
@@ -29,6 +30,11 @@ builder.Services.RegisterMultiSourceCache(
         SyncTimeout = 5000,
         ConnectTimeout = 5000,
         ResponseTimeout = 5000
+    },
+    new RedisCacheOptions()
+    {
+        ConnectionRestoredHandler = (o, eventArgs) => { Console.WriteLine("[断开链接]"); },
+        ConnectionFailureHandler = (o, eventArgs) => { Console.WriteLine("[重新链接]"); }
     }
 );
 

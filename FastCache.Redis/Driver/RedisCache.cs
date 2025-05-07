@@ -28,8 +28,7 @@ namespace FastCache.Redis.Driver
             return _redLockFactory;
         }
 
-        public RedisCache(ConfigurationOptions configuration, RedisCacheOptions? redisCacheOptions = null,
-            Action<object?, ConnectionFailedEventArgs>? customHandler = null)
+        public RedisCache(ConfigurationOptions configuration, RedisCacheOptions? redisCacheOptions = null)
         {
             if (configuration == null)
                 throw new ArgumentNullException(
@@ -52,9 +51,9 @@ namespace FastCache.Redis.Driver
 
             SetupRedisLockFactory(new List<ConnectionMultiplexer>() { _redisConnection }, option);
 
-            RegisterRedisConnectionFailure(_redisConnection, customHandler);
+            RegisterRedisConnectionFailure(_redisConnection, option.ConnectionFailureHandler);
 
-            RegisterRedisConnectionRestoredHandler(_redisConnection, customHandler);
+            RegisterRedisConnectionRestoredHandler(_redisConnection, option.ConnectionRestoredHandler);
         }
 
         private void RegisterRedisConnectionFailure(ConnectionMultiplexer connectionMultiplexer,
