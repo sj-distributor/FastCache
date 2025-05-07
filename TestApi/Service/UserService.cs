@@ -28,7 +28,7 @@ public class UserService : IService, IUserService
         return await _dbContext.Set<User>().SingleAsync(x => x.Id == id && x.Name == name);
     }
 
-    [Cacheable("user-single", "{id}", 60 * 10)]
+    [Cacheable("user-single", "{id}", 600)]
     public virtual async Task<User> Single(string id)
     {
         Thread.Sleep(TimeSpan.FromSeconds(1));

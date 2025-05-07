@@ -1,6 +1,8 @@
 using AspectCore.Extensions.DependencyInjection;
+using FastCache.Core.Entity;
 using FastCache.InMemory.Setup;
 using FastCache.MultiSource.Setup;
+using StackExchange.Redis;
 using TestApi.DB;
 using TestApi.Service;
 
@@ -16,10 +18,26 @@ builder.Host.UseServiceProviderFactory(new DynamicProxyServiceProviderFactory())
 
 builder.Services.AddMvc().AddControllersAsServices();
 
-builder.Services.AddMultiSourceCache(
-    "server=localhost:6379;timeout=5000;MaxMessageSize=1024000;Expire=3600", // "Expire=3600" redis global timeout 
-    true
+builder.Services.RegisterMultiSourceCache(
+    new ConfigurationOptions()
+    {
+        EndPoints = { "localhost:6379" },
+        ReconnectRetryPolicy = new ExponentialRetry(
+            deltaBackOffMilliseconds: 1000, // 初始延迟 1s
+            maxDeltaBackOffMilliseconds: 30000 // 最大延迟 30s
+        ),
+        AbortOnConnectFail = false,
+        SyncTimeout = 5000,
+        ConnectTimeout = 5000,
+        ResponseTimeout = 5000
+    },
+    new RedisCacheOptions()
+    {
+        ConnectionRestoredHandler = (o, eventArgs) => { Console.WriteLine("[断开链接]"); },
+        ConnectionFailureHandler = (o, eventArgs) => { Console.WriteLine("[重新链接]"); }
+    }
 );
+
 
 // builder.Services.AddMultiBucketsInMemoryCache();
 builder.Services.AddInMemoryCache();

@@ -16,6 +16,7 @@
     <ItemGroup>
         <PackageReference Include="AspectCore.Core" Version="2.4.0" />
         <PackageReference Include="NewLife.Redis" Version="5.6.2024.203" />
+        <PackageReference Include="RedLock.net" Version="2.3.2" />
     </ItemGroup>
 
 </Project>
