@@ -17,7 +17,7 @@ builder.Host.UseServiceProviderFactory(new DynamicProxyServiceProviderFactory())
 
 builder.Services.AddMvc().AddControllersAsServices();
 
-builder.Services.AddMultiSourceCache(
+builder.Services.RegisterMultiSourceCache(
     new ConfigurationOptions()
     {
         EndPoints = { "localhost:6379" },
