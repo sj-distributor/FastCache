@@ -1,117 +1,122 @@
+using System;
+using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
-using System.Threading.Tasks;
 using FastCache.Core.Driver;
 using FastCache.Core.Entity;
-using NewLife.Caching;
-using Newtonsoft.Json;
+using RedLockNet.SERedis;
+using RedLockNet.SERedis.Configuration;
+using StackExchange.Redis;
 
 namespace FastCache.Redis.Driver
 {
     public partial class RedisCache : IRedisCache
     {
-        private bool _canGetRedisClient = false;
+        private RedLockFactory _redLockFactory;
 
-        private readonly FullRedis _redisClient;
+        private readonly ConnectionMultiplexer _redisConnection;
 
-        public FullRedis? GetRedisClient()
+        private readonly List<EventHandler<ConnectionFailedEventArgs>> _eventHandlers =
+            new List<EventHandler<ConnectionFailedEventArgs>>();
+
+        // TODO 考虑增加version控制获取缓存的逻辑
+        private readonly int _doubleDeleteDelayedMs;
+
+        public ConnectionMultiplexer GetConnectionMultiplexer()
         {
-            return _canGetRedisClient ? _redisClient : null;
+            return _redisConnection;
         }
 
-        public RedisCache(string connectionString, bool canGetRedisClient = false)
+        public RedLockFactory GetRedLockFactory()
         {
-            _canGetRedisClient = canGetRedisClient;
-            _redisClient = new FullRedis();
-            _redisClient.Init(connectionString);
+            return _redLockFactory;
         }
 
-        public Task Set(string key, CacheItem cacheItem, long expire = 0)
+        public RedisCache(ConfigurationOptions configuration, RedisCacheOptions? redisCacheOptions = null)
         {
-            var hasKey = _redisClient.ContainsKey(key);
-            if (hasKey) return Task.CompletedTask;
+            if (configuration == null)
+                throw new ArgumentNullException(
+                    paramName: nameof(configuration),
+                    message: "Redis configuration cannot be null. Please provide valid ConfigurationOptions");
 
-            if (cacheItem.Value != null)
+            if (configuration.EndPoints.Count == 0)
             {
-                cacheItem.Value = JsonConvert.SerializeObject(cacheItem.Value);
+                throw new ArgumentException(
+                    message: "At least one Redis endpoint must be configured",
+                    paramName: nameof(configuration));
             }
 
-            if (expire > 0)
-            {
-                _redisClient.Add(key, cacheItem, (int)expire);
-            }
-            else
-            {
-                _redisClient.Add(key, cacheItem);
-            }
+            var option = redisCacheOptions ?? new RedisCacheOptions();
 
-            return Task.CompletedTask;
+            _redisConnection = ConnectionMultiplexer.Connect(configuration);
+
+            if (_redisConnection == null)
+                throw new InvalidOperationException();
+
+            _doubleDeleteDelayedMs = option.DoubleDeleteDelayedMs;
+
+            SetupRedisLockFactory(new List<ConnectionMultiplexer>() { _redisConnection }, option);
+
+            RegisterRedisConnectionFailure(_redisConnection, option.ConnectionFailureHandler);
+
+            RegisterRedisConnectionRestoredHandler(_redisConnection, option.ConnectionRestoredHandler);
         }
 
-        public Task<CacheItem> Get(string key)
+        private void RegisterRedisConnectionFailure(ConnectionMultiplexer connectionMultiplexer,
+            Action<object?, ConnectionFailedEventArgs>? customHandler = null)
         {
-            var cacheValue = _redisClient.Get<CacheItem>(key);
-            if (string.IsNullOrWhiteSpace(cacheValue?.AssemblyName) || string.IsNullOrWhiteSpace(cacheValue?.Type) ||
-                cacheValue?.Value == null) return Task.FromResult(new CacheItem());
-
-            var assembly = Assembly.Load(cacheValue.AssemblyName);
-            var valueType = assembly.GetType(cacheValue.Type, true, true);
-            cacheValue.Value = JsonConvert.DeserializeObject(cacheValue.Value as string, valueType);
-            return Task.FromResult(cacheValue);
-        }
-
-        public Task Delete(string key)
-        {
-            _redisClient.Remove(key);
-            return Task.CompletedTask;
-        }
-
-
-        public Task Delete(string key, string prefix = "")
-        {
-            if (key.Contains('*'))
+            EventHandler<ConnectionFailedEventArgs> handler = (sender, args) =>
             {
-                string[] list = { };
-                if (key.First() == '*' || key.Last() == '*')
-                {
-                    if (string.IsNullOrEmpty(prefix))
-                    {
-                        list = _redisClient.Search(key, 1000).ToArray();
-                    }
-                    else
-                    {
-                        if (key.Length > 0 && key.First() == '*')
-                        {
-                            key = key[1..];
-                        }
+                var logMessage = $"[Redis连接失败] " +
+                                 $"类型: {args.FailureType}, " +
+                                 $"端点: {args.EndPoint}, " +
+                                 $"异常: {args.Exception?.GetBaseException().Message}";
 
-                        if (key.Length > 0 && key.Last() == '*')
-                        {
-                            key = key[..^1];
-                        }
+                Console.WriteLine(logMessage);
 
-                        list = string.IsNullOrEmpty(key)
-                            ? _redisClient.Search($"{prefix}*", 1000).ToArray()
-                            : _redisClient.Search($"{prefix}*", 1000).Where(x => x.Contains(key)).ToArray();
-                    }
-                }
-                else
-                {
-                    _redisClient.Remove(key);
-                }
+                customHandler?.Invoke(sender, args);
+            };
 
-                if (list?.Length > 0)
-                {
-                    _redisClient.Remove(list);
-                }
-            }
-            else
-            {
-                var removeKey = string.IsNullOrEmpty(prefix) ? key : $"{prefix}:{key}";
-                _redisClient.Remove(removeKey);
-            }
+            connectionMultiplexer.ConnectionFailed += handler;
 
-            return Task.CompletedTask;
+            _eventHandlers.Add(handler);
         }
+
+        private void RegisterRedisConnectionRestoredHandler(ConnectionMultiplexer connectionMultiplexer,
+            Action<object?, ConnectionFailedEventArgs>? customHandler = null)
+        {
+            EventHandler<ConnectionFailedEventArgs> handler = (sender, args) =>
+            {
+                Console.WriteLine($"[连接恢复]");
+
+                // 执行自定义处理
+                customHandler?.Invoke(sender, args);
+            };
+
+            connectionMultiplexer.ConnectionRestored += handler;
+
+            _eventHandlers.Add(handler);
+        }
+
+        private void SetupRedisLockFactory(List<ConnectionMultiplexer> connectionMultiplexers,
+            RedisCacheOptions redisCacheOptions)
+        {
+            var redLockMultiplexers = connectionMultiplexers
+                .Select(connectionMultiplexer => (RedLockMultiplexer)connectionMultiplexer).ToList();
+
+            _redLockFactory = RedLockFactory.Create(redLockMultiplexers,
+                new RedLockRetryConfiguration(retryCount: redisCacheOptions.QuorumRetryCount,
+                    retryDelayMs: redisCacheOptions.QuorumRetryDelayMs));
+        }
+
+        // public void Dispose()
+        // {
+        //     foreach (var handler in _eventHandlers)
+        //     {
+        //         _redisConnection.ConnectionFailed -= handler;
+        //     }
+        //
+        //     _redisConnection?.Dispose();
+        //     _redLockFactory?.Dispose();
+        // }
     }
 }

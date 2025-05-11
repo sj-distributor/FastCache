@@ -11,7 +11,6 @@ namespace TestApi.Controllers;
 public class UseLockController(ILockUserService lockUserService)
 {
     [HttpPost("add-with-cache")]
-    [DistributedLock("user-add")]
     [MultiSourceCacheable("MultiSource-single", "{user:id}", Target.Redis, 5)]
     [MultiSourceEvictable(new[] { "MultiSource-single", "MultiSources" }, ["{user:id}"], Target.Redis)]
     public virtual async Task<User> AddWithCache(User user, int delayMs = 0)
@@ -20,7 +19,6 @@ public class UseLockController(ILockUserService lockUserService)
     }
 
     [HttpPost]
-    [DistributedLock("user-add")]
     public virtual async Task<User> Add(User user, int delayMs = 0)
     {
         return await lockUserService.Add(user, delayMs);

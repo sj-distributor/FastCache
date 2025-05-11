@@ -1,6 +1,7 @@
 using FastCache.Core.Driver;
 using FastCache.Redis.Driver;
 using Microsoft.Extensions.DependencyInjection;
+using StackExchange.Redis;
 
 namespace FastCache.Redis.Setup
 {
@@ -8,11 +9,10 @@ namespace FastCache.Redis.Setup
     {
         public static void AddRedisCache(
             this IServiceCollection services,
-            string connectionString,
-            bool canGetRedisClient = false
+            ConfigurationOptions configurationOptions
         )
         {
-            services.AddSingleton<ICacheClient>(new RedisCache(connectionString, canGetRedisClient));
+            services.AddSingleton<ICacheClient>(new RedisCache(configurationOptions));
         }
     }
 }

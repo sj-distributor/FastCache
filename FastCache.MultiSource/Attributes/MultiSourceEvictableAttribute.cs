@@ -42,16 +42,19 @@ namespace FastCache.MultiSource.Attributes
         private readonly string[] _keys;
         private readonly string[] _expression;
         private readonly Target _target;
+        private readonly int _doubleDeleteDelayedMs;
 
         public sealed override int Order { get; set; }
 
         public override bool AllowMultiple { get; } = true;
 
-        public MultiSourceEvictableAttribute(string[] keys, string[] expression, Target target)
+        public MultiSourceEvictableAttribute(string[] keys, string[] expression, Target target,
+            int doubleDeleteDelayedMs = 0)
         {
             _keys = keys;
             _expression = expression;
             _target = target;
+            _doubleDeleteDelayedMs = doubleDeleteDelayedMs;
             Order = 3;
         }
 
