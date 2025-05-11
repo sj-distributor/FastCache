@@ -300,6 +300,38 @@ public partial class RedisCacheTests(ITestOutputHelper testOutputHelper)
     }
 
     [Theory]
+    [InlineData("", "anson555", "18", null)]
+    [InlineData("", "anson555555", "19", null)]
+    public async void TestMemoryCacheCanDeleteByFirstPatternWithDelayed(string prefix, string key, string value,
+        string result)
+    {
+        await _redisClient.Set(key, new CacheItem()
+        {
+            Type = value.GetType().FullName,
+            AssemblyName = value.GetType().Assembly.FullName,
+            Value = value,
+            Expire = DateTime.UtcNow.AddSeconds(20).Ticks
+        });
+        await _redisClient.Delete("anson*", prefix);
+        var s = await _redisClient.Get(key);
+        Assert.Equal(s.Value, result);
+
+        await _redisClient.Set(key, new CacheItem()
+        {
+            Type = value.GetType().FullName,
+            AssemblyName = value.GetType().Assembly.FullName,
+            Value = value,
+            Expire = DateTime.UtcNow.AddSeconds(20).Ticks
+        });
+        var s2 = await _redisClient.Get(key);
+        Assert.Equal(s2.Value, value);
+
+        await Task.Delay(TimeSpan.FromSeconds(2));
+        var s3 = await _redisClient.Get(key);
+        Assert.Null(s3.Value);
+    }
+
+    [Theory]
     [InlineData("anson1111", "18", null)]
     [InlineData("anson2222", "19", null)]
     public async void TestRedisCacheCanDeleteByLastPatternByFullKey(string key, string value,
@@ -559,6 +591,8 @@ public partial class RedisCacheTests(ITestOutputHelper testOutputHelper)
             AssemblyName = value.GetType().Assembly.GetName().Name,
             Type = value.GetType().FullName
         });
+        var cacheItemBySet = await _redisClient.Get(key3);
+        Assert.Equal(cacheItemBySet.Value, value);
 
         await Task.Delay(TimeSpan.FromSeconds(2));
 
@@ -586,6 +620,8 @@ public partial class RedisCacheTests(ITestOutputHelper testOutputHelper)
             AssemblyName = value.GetType().Assembly.GetName().Name,
             Type = value.GetType().FullName
         });
+        var cacheItemBySet = await _redisClient.Get(key);
+        Assert.Equal(cacheItemBySet.Value, value);
 
         await Task.Delay(TimeSpan.FromSeconds(5));
 
