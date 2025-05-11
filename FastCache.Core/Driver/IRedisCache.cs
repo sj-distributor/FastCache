@@ -10,7 +10,7 @@ namespace FastCache.Core.Driver
 {
     public interface IRedisCache : ICacheClient
     {
-        void Dispose();
+        // void Dispose();
         
         ConnectionMultiplexer GetConnectionMultiplexer();
 
@@ -28,5 +28,7 @@ namespace FastCache.Core.Driver
         Task<long> BatchDeleteKeysWithPipelineAsync(
             IEnumerable<string> keys,
             int batchSize = 200);
+        
+        Task<long> TryRemove(string[] keys, int doubleDeleteDelayedMs = 0);
     }
 }

@@ -64,16 +64,42 @@ namespace FastCache.Redis.Driver
             return cacheItem;
         }
 
-        public Task<bool> Delete(string key)
+        public async Task<long> TryRemove(string[] keys, int doubleDeleteDelayedMs = 0)
+        {
+            if (keys.Length == 0) return 0;
+
+            var db = _redisConnection.GetDatabase();
+
+            var redisKeys = Array.ConvertAll(keys, key => (RedisKey)key);
+
+            // 优先使用传入方法的参数，其次使用类字段的默认值
+            var actualDelayMs = doubleDeleteDelayedMs > 0 ? doubleDeleteDelayedMs : _doubleDeleteDelayedMs;
+
+            var keyDeleteResult = await db.KeyDeleteAsync(redisKeys).ConfigureAwait(false);
+
+            // 如果第一次删除成功且设置了延迟时间，则安排延迟双删
+            if (keyDeleteResult > 0 && actualDelayMs > 0)
+            {
+                // 使用后台任务执行延迟双删（不阻塞当前请求）
+                _ = Task.Run(async () =>
+                {
+                    await Task.Delay(actualDelayMs).ConfigureAwait(false);
+                    await db.KeyDeleteAsync(redisKeys).ConfigureAwait(false);
+                    // 可选：记录日志或监控指标
+                });
+            }
+
+            return keyDeleteResult;
+        }
+
+        public async Task<bool> Delete(string key)
         {
             if (string.IsNullOrWhiteSpace(key))
                 throw new ArgumentException("Key cannot be null or empty", nameof(key));
 
-            var db = _redisConnection.GetDatabase();
+            var removeResult = await TryRemove(new[] { key }).ConfigureAwait(false);
 
-            db.KeyDelete(key);
-
-            return Task.FromResult(true);
+            return removeResult > 0;
         }
 
         public async Task<long> BatchDeleteKeysWithPipelineAsync(
@@ -90,9 +116,11 @@ namespace FastCache.Redis.Driver
                 var batch = db.CreateBatch();
 
                 var enumerable = chunk as string[] ?? chunk.ToArray();
-                var redisKeys = Array.ConvertAll(enumerable, key => (RedisKey)key);
+                // var redisKeys = Array.ConvertAll(enumerable, key => (RedisKey)key);
 
-                var keyDeleteResult = batch.KeyDeleteAsync(redisKeys);
+                // var keyDeleteResult = batch.KeyDeleteAsync(redisKeys);
+
+                var keyDeleteResult = TryRemove(enumerable);
 
                 // 3. 触发批量发送（所有命令一次性发往Redis）
                 batch.Execute();
@@ -109,8 +137,6 @@ namespace FastCache.Redis.Driver
         {
             if (string.IsNullOrWhiteSpace(key))
                 throw new ArgumentException("Key cannot be null or empty", nameof(key));
-
-            var db = _redisConnection.GetDatabase();
 
             if (key.Contains('*'))
             {
@@ -143,7 +169,7 @@ namespace FastCache.Redis.Driver
                 }
                 else
                 {
-                    await db.KeyDeleteAsync(key);
+                    await Delete(key).ConfigureAwait(false);
                 }
 
                 if (list?.Length > 0)
@@ -154,7 +180,7 @@ namespace FastCache.Redis.Driver
             else
             {
                 var removeKey = string.IsNullOrEmpty(prefix) ? key : $"{prefix}:{key}";
-                await db.KeyDeleteAsync(removeKey);
+                await Delete(removeKey).ConfigureAwait(false);
             }
         }
     }

@@ -18,6 +18,9 @@ namespace FastCache.Redis.Driver
         private readonly List<EventHandler<ConnectionFailedEventArgs>> _eventHandlers =
             new List<EventHandler<ConnectionFailedEventArgs>>();
 
+        // TODO 考虑增加version控制获取缓存的逻辑
+        private readonly int _doubleDeleteDelayedMs;
+
         public ConnectionMultiplexer GetConnectionMultiplexer()
         {
             return _redisConnection;
@@ -48,6 +51,8 @@ namespace FastCache.Redis.Driver
 
             if (_redisConnection == null)
                 throw new InvalidOperationException();
+
+            _doubleDeleteDelayedMs = option.DoubleDeleteDelayedMs;
 
             SetupRedisLockFactory(new List<ConnectionMultiplexer>() { _redisConnection }, option);
 
@@ -103,15 +108,15 @@ namespace FastCache.Redis.Driver
                     retryDelayMs: redisCacheOptions.QuorumRetryDelayMs));
         }
 
-        public void Dispose()
-        {
-            foreach (var handler in _eventHandlers)
-            {
-                _redisConnection.ConnectionFailed -= handler;
-            }
-
-            _redisConnection?.Dispose();
-            _redLockFactory?.Dispose();
-        }
+        // public void Dispose()
+        // {
+        //     foreach (var handler in _eventHandlers)
+        //     {
+        //         _redisConnection.ConnectionFailed -= handler;
+        //     }
+        //
+        //     _redisConnection?.Dispose();
+        //     _redLockFactory?.Dispose();
+        // }
     }
 }

@@ -15,6 +15,11 @@ namespace FastCache.Core.Entity
         /// </summary>
         public int QuorumRetryDelayMs { get; set; } = 400;
 
+        /// <summary>
+        /// 全局延迟删除时间(ms)
+        /// </summary>
+        public int DoubleDeleteDelayedMs { get; set; } = 2000;
+
         public Action<object?, ConnectionFailedEventArgs>? ConnectionFailureHandler { get; set; } = null;
 
         public Action<object?, ConnectionFailedEventArgs>? ConnectionRestoredHandler { get; set; } = null;

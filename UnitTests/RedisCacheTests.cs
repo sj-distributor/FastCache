@@ -17,7 +17,7 @@ public partial class RedisCacheTests(ITestOutputHelper testOutputHelper)
         EndPoints = { "localhost:6379" },
         SyncTimeout = 5000,
         ConnectTimeout = 5000,
-        ResponseTimeout = 5000
+        ResponseTimeout = 5000,
     });
 
     private readonly RedisCache _redisClient2 =
@@ -484,5 +484,112 @@ public partial class RedisCacheTests(ITestOutputHelper testOutputHelper)
     {
         var redisClient = _redisClient.GetConnectionMultiplexer();
         Assert.NotNull(redisClient);
+    }
+
+    [Fact]
+    public async void TestBatchDeleteKeysWithPipelineAsync()
+    {
+        var key = "TestBatchDeleteKeysWithPipelineAsync1";
+        var value = "1";
+        await _redisClient.Set(key, new CacheItem()
+        {
+            Value = value,
+            AssemblyName = value.GetType().Assembly.GetName().Name,
+            Type = value.GetType().FullName
+        });
+
+        var key2 = "TestBatchDeleteKeysWithPipelineAsync2";
+        var value2 = "1";
+        await _redisClient.Set(key2, new CacheItem()
+        {
+            Value = value2,
+            AssemblyName = value.GetType().Assembly.GetName().Name,
+            Type = value.GetType().FullName
+        });
+
+        var key3 = "TestBatchDeleteKeysWithPipelineAsync3";
+        var value3 = "1";
+        await _redisClient.Set(key3, new CacheItem()
+        {
+            Value = value3,
+            AssemblyName = value.GetType().Assembly.GetName().Name,
+            Type = value.GetType().FullName
+        });
+
+        var batchDeletedResult = await _redisClient.BatchDeleteKeysWithPipelineAsync(new[] { key, key2, key3 });
+        Assert.Equal(3, batchDeletedResult);
+    }
+
+    [Fact]
+    public async void TestBatchDeleteKeysWithPipelineAsyncWithDelayed()
+    {
+        var key = "TestBatchDeleteKeysWithPipelineAsync1";
+        var value = "1";
+        await _redisClient.Set(key, new CacheItem()
+        {
+            Value = value,
+            AssemblyName = value.GetType().Assembly.GetName().Name,
+            Type = value.GetType().FullName
+        });
+
+        var key2 = "TestBatchDeleteKeysWithPipelineAsync2";
+        var value2 = "1";
+        await _redisClient.Set(key2, new CacheItem()
+        {
+            Value = value2,
+            AssemblyName = value.GetType().Assembly.GetName().Name,
+            Type = value.GetType().FullName
+        });
+
+        var key3 = "TestBatchDeleteKeysWithPipelineAsync3";
+        var value3 = "1";
+        await _redisClient.Set(key3, new CacheItem()
+        {
+            Value = value3,
+            AssemblyName = value.GetType().Assembly.GetName().Name,
+            Type = value.GetType().FullName
+        });
+
+        var batchDeletedResult = await _redisClient.BatchDeleteKeysWithPipelineAsync(new[] { key, key2, key3 });
+        Assert.Equal(3, batchDeletedResult);
+
+        await _redisClient.Set(key3, new CacheItem()
+        {
+            Value = value3,
+            AssemblyName = value.GetType().Assembly.GetName().Name,
+            Type = value.GetType().FullName
+        });
+
+        await Task.Delay(TimeSpan.FromSeconds(2));
+
+        var cacheItem = await _redisClient.Get(key3);
+        Assert.Null(cacheItem.Value);
+    }
+
+    [Fact]
+    public async void TestCanDelayedRemove()
+    {
+        var key = "TestCanDelayedRemove";
+        var value = "1";
+        await _redisClient.Set(key, new CacheItem()
+        {
+            Value = value,
+            AssemblyName = value.GetType().Assembly.GetName().Name,
+            Type = value.GetType().FullName
+        });
+
+        await _redisClient.Delete(key);
+
+        await _redisClient.Set(key, new CacheItem()
+        {
+            Value = value,
+            AssemblyName = value.GetType().Assembly.GetName().Name,
+            Type = value.GetType().FullName
+        });
+
+        await Task.Delay(TimeSpan.FromSeconds(5));
+
+        var cacheItem = await _redisClient.Get(key);
+        Assert.Null(cacheItem.Value);
     }
 }
