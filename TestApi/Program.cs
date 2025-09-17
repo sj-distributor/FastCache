@@ -26,6 +26,7 @@ builder.Services.RegisterMultiSourceCache(
             deltaBackOffMilliseconds: 1000, // 初始延迟 1s
             maxDeltaBackOffMilliseconds: 30000 // 最大延迟 30s
         ),
+        DefaultDatabase = 12,
         AbortOnConnectFail = false,
         SyncTimeout = 5000,
         ConnectTimeout = 5000,

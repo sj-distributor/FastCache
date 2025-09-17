@@ -14,6 +14,7 @@ namespace FastCache.Redis.Driver
         private RedLockFactory _redLockFactory;
 
         private readonly ConnectionMultiplexer _redisConnection;
+        private readonly IDatabase? _database;
 
         private readonly List<EventHandler<ConnectionFailedEventArgs>> _eventHandlers =
             new List<EventHandler<ConnectionFailedEventArgs>>();
@@ -50,7 +51,14 @@ namespace FastCache.Redis.Driver
             _redisConnection = ConnectionMultiplexer.Connect(configuration);
 
             if (_redisConnection == null)
-                throw new InvalidOperationException();
+                throw new InvalidOperationException(
+                    "Redis connection not initialized. Please call Initialize method first");
+
+            _database = _redisConnection.GetDatabase(configuration.DefaultDatabase ?? 0);
+
+            if (_database == null)
+                throw new InvalidOperationException(
+                    $"Failed to get database instance. Connection status: {_redisConnection?.IsConnected.ToString() ?? "null"}, Requested database number: {configuration.DefaultDatabase ?? 0}");
 
             _doubleDeleteDelayedMs = option.DoubleDeleteDelayedMs;
 

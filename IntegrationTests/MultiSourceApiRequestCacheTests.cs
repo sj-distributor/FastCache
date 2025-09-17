@@ -122,6 +122,14 @@ public class MultiSourceApiRequestCacheTests : IClassFixture<WebApplicationFacto
             Name = "anson5"
         });
 
+        var resp0 = await _httpClient.GetAsync($"{baseUrl}?id=5");
+        if (resp0.StatusCode == HttpStatusCode.OK)
+        {
+            var user0Entity = await resp0.Content.ReadFromJsonAsync<User>();
+            Assert.True(user0Entity != null);
+            Assert.Equal("5", user0Entity.Id);
+        }
+
         var resp1 = await _httpClient.GetAsync($"{baseUrl}/users?page=1");
         Assert.True(resp1.StatusCode == HttpStatusCode.OK);
 
@@ -129,8 +137,6 @@ public class MultiSourceApiRequestCacheTests : IClassFixture<WebApplicationFacto
 
         var resp2 = await _httpClient.DeleteAsync($"{baseUrl}?id=1");
         Assert.True(resp2.StatusCode == HttpStatusCode.OK);
-
-        await resp2.Content.ReadAsStringAsync();
 
         var resp3 = await _httpClient.GetAsync($"{baseUrl}/users?page=1");
         Assert.True(resp3.StatusCode == HttpStatusCode.OK);
@@ -148,6 +154,28 @@ public class MultiSourceApiRequestCacheTests : IClassFixture<WebApplicationFacto
         Assert.Equal(result3, result4);
         var timeResult = end - start;
         Assert.True(timeResult < 500000);
+    }
+
+    [Fact]
+    public async void CacheAndRemoveWithRedis()
+    {
+        var baseUrl = "/MultiSource";
+        await _httpClient.PostAsJsonAsync($"{baseUrl}", new User(DateTimeOffset.UtcNow)
+        {
+            Id = "5",
+            Name = "anson5"
+        });
+
+        var resp0 = await _httpClient.GetAsync($"{baseUrl}/getSingleOrDefaultAsync?id=5");
+        var user0Entity = await resp0.Content.ReadFromJsonAsync<User>();
+        Assert.True(user0Entity != null);
+        Assert.Equal("5", user0Entity.Id);
+
+        var resp2 = await _httpClient.DeleteAsync($"{baseUrl}?id=5");
+        Assert.Equal(HttpStatusCode.OK, resp2.StatusCode);
+
+        var resp3 = await _httpClient.GetAsync($"{baseUrl}/getSingleOrDefaultAsync?id=5");
+        Assert.Equal(HttpStatusCode.NoContent, resp3.StatusCode);
     }
 
     [Theory]

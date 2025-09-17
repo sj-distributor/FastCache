@@ -24,6 +24,12 @@ public class MultiSourceController : ControllerBase
         return await _userService.Single(id);
     }
     
+    [HttpGet("getSingleOrDefaultAsync")]
+    public virtual async Task<User?> GetSingleOrDefaultAsync(string id)
+    {
+        return await _userService.SingleOrDefault(id);
+    }
+    
     [HttpGet("get/two")]
     public virtual async Task<User> Get(string id, string name)
     {
