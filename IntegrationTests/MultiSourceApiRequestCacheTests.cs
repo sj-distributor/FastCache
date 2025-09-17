@@ -64,7 +64,7 @@ public class MultiSourceApiRequestCacheTests : IClassFixture<WebApplicationFacto
         var resp1 = await _httpClient.GetAsync($"{baseUrl}/?id=1");
         stopwatch.Stop();
 
-        Assert.True(resp1.StatusCode == HttpStatusCode.OK);
+        Assert.Equal(HttpStatusCode.OK, resp1.StatusCode);
         await resp1.Content.ReadAsStringAsync();
 
         // 验证第一次请求花费的时间是否大于 1 秒（1000 毫秒）
