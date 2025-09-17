@@ -2,8 +2,8 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using FastCache.Core.Entity;
+using FastCache.Core.Enums;
 using FastCache.InMemory.Drivers;
-using FastCache.InMemory.Enum;
 using Xunit;
 
 namespace UnitTests;
@@ -104,6 +104,38 @@ public class MemoryCacheTests
         await _memoryCache.Delete("anson*", prefix);
         var s = await _memoryCache.Get(key);
         Assert.Equal(s.Value, result);
+    }
+    
+    [Theory]
+    [InlineData("", "anson555", "18", null)]
+    [InlineData("", "anson555555", "19", null)]
+    public async void TestMemoryCacheCanDeleteByFirstPatternWithDelayed(string prefix, string key, string value,
+        string result)
+    {
+        await _memoryCache.Set(key, new CacheItem()
+        {
+            Type = value.GetType().FullName,
+            AssemblyName = value.GetType().Assembly.FullName,
+            Value = value,
+            Expire = DateTime.UtcNow.AddSeconds(20).Ticks
+        });
+        await _memoryCache.Delete("anson*", prefix);
+        var s = await _memoryCache.Get(key);
+        Assert.Equal(s.Value, result);
+
+        await _memoryCache.Set(key, new CacheItem()
+        {
+            Type = value.GetType().FullName,
+            AssemblyName = value.GetType().Assembly.FullName,
+            Value = value,
+            Expire = DateTime.UtcNow.AddSeconds(20).Ticks
+        });
+        var s2 = await _memoryCache.Get(key);
+        Assert.Equal(s2.Value, value);
+
+        await Task.Delay(TimeSpan.FromSeconds(2));
+        var s3 = await _memoryCache.Get(key);
+        Assert.Null(s3.Value);
     }
 
     [Theory]

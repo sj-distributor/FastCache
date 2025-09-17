@@ -1,4 +1,4 @@
-namespace FastCache.InMemory.Enum
+namespace FastCache.Core.Enums
 {
     public enum MaxMemoryPolicy
     {
@@ -7,4 +7,3 @@ namespace FastCache.InMemory.Enum
         TTL // Time To Live
     }
 }
-

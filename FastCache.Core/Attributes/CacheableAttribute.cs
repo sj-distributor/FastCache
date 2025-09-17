@@ -42,7 +42,7 @@ namespace FastCache.Core.Attributes
     {
         private readonly string _key;
         private readonly string _expression;
-        private readonly long _expire;
+        private readonly TimeSpan _expire;
 
         public sealed override int Order { get; set; }
 
@@ -56,8 +56,20 @@ namespace FastCache.Core.Attributes
             _taskResultMethod = typeof(Task).GetMethods()
                 .First(p => p.Name == "FromResult" && p.ContainsGenericParameters);
         }
+        
+        // 支持秒数的构造器（保持向后兼容）
+        public CacheableAttribute(string prefix, string keyPattern, int expirationSeconds)
+            : this(prefix, keyPattern, TimeSpan.FromSeconds(expirationSeconds))
+        {
+        }
 
-        public CacheableAttribute(string key, string expression, long expireSeconds = 0)
+        // 新增支持TimeSpan的构造器
+        public CacheableAttribute(string prefix, string keyPattern, double expirationMinutes)
+            : this(prefix, keyPattern, TimeSpan.FromMinutes(expirationMinutes))
+        {
+        }
+
+        public CacheableAttribute(string key, string expression, TimeSpan expireSeconds = default)
         {
             _key = key;
             _expression = expression;
@@ -134,11 +146,15 @@ namespace FastCache.Core.Attributes
 
             var returnType = value?.GetType();
 
+            var expire = 0l;
+
             await cacheClient.Set(key, new CacheItem
             {
                 Value = value,
                 CreatedAt = DateTime.UtcNow.Ticks,
-                Expire = _expire > 0 ? DateTime.UtcNow.AddSeconds(_expire).Ticks : DateTime.UtcNow.AddYears(1).Ticks,
+                Expire = _expire > TimeSpan.Zero
+                    ? DateTime.UtcNow.Add(_expire).Ticks
+                    : DateTime.UtcNow.AddYears(1).Ticks,
                 AssemblyName = returnType?.Assembly?.GetName()?.FullName ?? typeof(string).Assembly.FullName,
                 Type = returnType?.FullName ?? string.Empty,
             }, _expire);

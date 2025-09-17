@@ -1,6 +1,7 @@
 using FastCache.Core.Driver;
+using FastCache.Core.Entity;
+using FastCache.Core.Enums;
 using FastCache.InMemory.Drivers;
-using FastCache.InMemory.Enum;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace FastCache.InMemory.Setup
@@ -9,14 +10,16 @@ namespace FastCache.InMemory.Setup
     {
         public static void AddInMemoryCache(
             this IServiceCollection services,
-            int maxCapacity = 1000000,
-            MaxMemoryPolicy maxMemoryPolicy = MaxMemoryPolicy.LRU, int cleanUpPercentage = 10, int delaySeconds = 2
+            MemoryCacheOptions? memoryCacheOptions = null
         )
         {
+            var option = memoryCacheOptions ?? new MemoryCacheOptions();
+
             services.AddSingleton<ICacheClient>(
                 new MemoryCache(
-                    maxCapacity, maxMemoryPolicy, cleanUpPercentage,
-                    delaySeconds: delaySeconds
+                    maxCapacity: option.MaxCapacity, maxMemoryPolicy: option.MemoryPolicy,
+                    cleanUpPercentage: option.CleanUpPercentage,
+                    delaySeconds: option.DelaySeconds
                 )
             );
         }

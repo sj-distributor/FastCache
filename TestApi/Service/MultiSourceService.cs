@@ -1,4 +1,3 @@
-using FastCache.Core.Attributes;
 using FastCache.Core.Enums;
 using FastCache.MultiSource.Attributes;
 using Microsoft.EntityFrameworkCore;
@@ -22,7 +21,7 @@ public class MultiSourceService(MemoryDbContext dbContext) : IService, IMultiSou
         return await dbContext.Set<User>().SingleAsync(x => x.Id == id);
     }
 
-    [MultiSourceCacheable("MultiSource-single", "{id}:{name}", Target.Redis, 60)]
+    [MultiSourceCacheable("MultiSource-single", "{id}:{name}", Target.Redis, 900)]
     public virtual async Task<User?> SingleOrDefault(string id, string name, bool canChange)
     {
         return await dbContext.Set<User>().SingleOrDefaultAsync(x => x.Id == id && x.Name == name);

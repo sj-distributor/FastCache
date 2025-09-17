@@ -23,7 +23,13 @@ public class MultiSourceController : ControllerBase
     {
         return await _userService.Single(id);
     }
-    
+
+    [HttpGet("getSingleOrDefaultAsync")]
+    public virtual async Task<User?> GetSingleOrDefaultAsync(string id)
+    {
+        return await _userService.SingleOrDefault(id);
+    }
+
     [HttpGet("get/two")]
     public virtual async Task<User> Get(string id, string name)
     {
@@ -45,8 +51,15 @@ public class MultiSourceController : ControllerBase
     }
 
     [HttpDelete]
-    [MultiSourceEvictable(new[] { "MultiSource-single", "MultiSources" }, ["{id}"], Target.Redis)]
+    [MultiSourceEvictable(["MultiSource-single", "MultiSources"], ["{id}"], Target.Redis)]
     public virtual bool Delete(string id)
+    {
+        return _userService.Delete(id);
+    }
+
+    [HttpDelete("cache/advanced/{id}")]
+    [MultiSourceEvictable(["MultiSource-single"], ["{id}", "{id}*"], Target.Redis)]
+    public virtual bool EvictUserCacheWithPattern(string id)
     {
         return _userService.Delete(id);
     }
@@ -57,13 +70,13 @@ public class MultiSourceController : ControllerBase
     {
         return _userService.List(page);
     }
-    
+
     [HttpGet("get")]
     public virtual async Task<User?> TestResultNull(string id)
     {
         return await _userService.SingleOrDefault(id);
     }
-    
+
     [HttpGet("get/name")]
     public virtual async Task<User?> SearchName(string name)
     {
