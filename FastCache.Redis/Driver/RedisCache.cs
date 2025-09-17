@@ -15,6 +15,7 @@ namespace FastCache.Redis.Driver
 
         private readonly ConnectionMultiplexer _redisConnection;
         private readonly IDatabase? _database;
+        private readonly ConfigurationOptions _configurationOptions;
 
         private readonly List<EventHandler<ConnectionFailedEventArgs>> _eventHandlers =
             new List<EventHandler<ConnectionFailedEventArgs>>();
@@ -47,6 +48,8 @@ namespace FastCache.Redis.Driver
             }
 
             var option = redisCacheOptions ?? new RedisCacheOptions();
+
+            _configurationOptions = configuration;
 
             _redisConnection = ConnectionMultiplexer.Connect(configuration);
 

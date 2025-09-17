@@ -171,11 +171,21 @@ public class MultiSourceApiRequestCacheTests : IClassFixture<WebApplicationFacto
         Assert.True(user0Entity != null);
         Assert.Equal("5", user0Entity.Id);
 
+        var resp11 = await _httpClient.GetAsync($"{baseUrl}/get/two?id=5&name=anson5");
+        var user11Entity = await resp11.Content.ReadFromJsonAsync<User>();
+        Assert.True(user11Entity != null);
+        Assert.Equal("5", user11Entity.Id);
+
         var resp2 = await _httpClient.DeleteAsync($"{baseUrl}?id=5");
         Assert.Equal(HttpStatusCode.OK, resp2.StatusCode);
 
+        await _httpClient.DeleteAsync($"{baseUrl}/cache/advanced/5");
+
         var resp3 = await _httpClient.GetAsync($"{baseUrl}/getSingleOrDefaultAsync?id=5");
         Assert.Equal(HttpStatusCode.NoContent, resp3.StatusCode);
+
+        var resp5 = await _httpClient.GetAsync($"{baseUrl}/get/two?id=5&name=anson5");
+        Assert.Equal(HttpStatusCode.NoContent, resp5.StatusCode);
     }
 
     [Theory]

@@ -48,7 +48,10 @@ namespace FastCache.Redis.Driver
 
             var batchBuffer = new List<string>(capacity: model.PageSize);
 
+            var database = _configurationOptions.DefaultDatabase ?? 0;
+
             foreach (var redisKey in server.Keys(
+                         database: database,
                          pattern: model.Pattern,
                          pageSize: model.PageSize))
             {
